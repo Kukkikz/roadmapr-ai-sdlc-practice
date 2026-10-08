@@ -77,6 +77,7 @@ describe("comments", () => {
     expect((await listComments(ctx.db, i.id)).map((c) => c.body)).toEqual(["second"]);
     expect(await listComments(ctx.db, i.id, { includeHidden: true })).toHaveLength(2);
     expect((await getIdea(ctx.db, i.id))?.commentCount).toBe(1);
+    expect((await getIdea(ctx.db, i.id, { includeHidden: true }))?.commentCount).toBe(2);
   });
 });
 
@@ -96,6 +97,17 @@ describe("tags", () => {
     await deleteTag(ctx.db, t.id);
     expect((await getIdea(ctx.db, i.id))?.tags).toEqual([]);
     expect((await listTags(ctx.db, boardId)).map((x) => x.name)).not.toContain("tag-a");
+  });
+});
+
+describe("getIdea", () => {
+  it("hides hidden Ideas from the public and does not resolve across Boards", async () => {
+    const i = await idea("Scoped target");
+    expect(await getIdea(ctx.db, i.id, { boardId })).not.toBeNull();
+    expect(await getIdea(ctx.db, i.id, { boardId: otherBoardId })).toBeNull();
+    await setIdeaHidden(ctx.db, i.id, true);
+    expect(await getIdea(ctx.db, i.id, { boardId })).toBeNull();
+    expect(await getIdea(ctx.db, i.id, { boardId, includeHidden: true })).not.toBeNull();
   });
 });
 
@@ -168,6 +180,24 @@ describe("listIdeas", () => {
     expect(await titles({ search: "theme" })).toEqual(["Newest"]);
     expect(await titles({ search: "nothing matches" })).toEqual([]);
     expect(await titles({ search: "   " })).toHaveLength(3);
+  });
+
+  it("pages stably when Ideas tie on votes and time", async () => {
+    const tieBoard = (await createBoard(ctx.db, { teamId: "t1", name: "Tie", slug: "tie" })).id;
+    const same = new Date("2026-05-01");
+    for (const n of [1, 2, 3, 4]) {
+      const row = await createIdea(ctx.db, {
+        boardId: tieBoard,
+        title: `T${n}`,
+        actorId: "anon:a",
+      });
+      await ctx.db.update(ideas).set({ createdAt: same }).where(eq(ideas.id, row.id));
+    }
+    const pages = [];
+    for (const offset of [0, 1, 2, 3]) {
+      pages.push(...(await listIdeas(ctx.db, { boardId: tieBoard, limit: 1, offset })));
+    }
+    expect(new Set(pages.map((p) => p.id)).size).toBe(4);
   });
 
   it("returns counts and tags with each row, and pages", async () => {

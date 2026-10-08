@@ -37,7 +37,11 @@ export type ListIdeasOptions = {
 
 // Counts are correlated subqueries, so one round trip returns the whole page (no N+1).
 const voteCountSql = sql<number>`(select count(*)::int from votes where votes.idea_id = ideas.id)`;
-const commentCountSql = sql<number>`(select count(*)::int from comments where comments.idea_id = ideas.id and comments.hidden = false)`;
+// The public count skips hidden Comments; moderators (includeHidden) count them all.
+const commentCountSql = (includeHidden: boolean) =>
+  includeHidden
+    ? sql<number>`(select count(*)::int from comments where comments.idea_id = ideas.id)`
+    : sql<number>`(select count(*)::int from comments where comments.idea_id = ideas.id and comments.hidden = false)`;
 
 /** One page of a Board's Ideas with vote count, comment count and Tags. */
 export async function listIdeas(db: Db, opts: ListIdeasOptions) {
@@ -54,8 +58,8 @@ export async function listIdeas(db: Db, opts: ListIdeasOptions) {
 
   const order =
     (opts.sort ?? "top") === "top"
-      ? [desc(voteCountSql), desc(ideas.createdAt)]
-      : [desc(ideas.createdAt)];
+      ? [desc(voteCountSql), desc(ideas.createdAt), desc(ideas.id)]
+      : [desc(ideas.createdAt), desc(ideas.id)];
 
   const rows = await db
     .select({
@@ -70,7 +74,7 @@ export async function listIdeas(db: Db, opts: ListIdeasOptions) {
       reviewedAt: ideas.reviewedAt,
       createdAt: ideas.createdAt,
       voteCount: voteCountSql,
-      commentCount: commentCountSql,
+      commentCount: commentCountSql(opts.includeHidden ?? false),
     })
     .from(ideas)
     .where(and(...conditions))
@@ -97,11 +101,27 @@ export async function listIdeas(db: Db, opts: ListIdeasOptions) {
   return rows.map((row) => ({ ...row, tags: byIdea.get(row.id) ?? [] }));
 }
 
-export async function getIdea(db: Db, ideaId: string) {
+/**
+ * One Idea, or null. Pass `boardId` so an Idea id from another Board does not resolve under
+ * this Board's URL. Hidden Ideas resolve only with `includeHidden` (moderators); the public
+ * gets null, which the page renders as not found.
+ */
+export async function getIdea(
+  db: Db,
+  ideaId: string,
+  opts: { boardId?: string; includeHidden?: boolean } = {},
+) {
+  const conditions: SQL[] = [eq(ideas.id, ideaId)];
+  if (opts.boardId) conditions.push(eq(ideas.boardId, opts.boardId));
+  if (!opts.includeHidden) conditions.push(eq(ideas.hidden, false));
   const [row] = await db
-    .select({ idea: ideas, voteCount: voteCountSql, commentCount: commentCountSql })
+    .select({
+      idea: ideas,
+      voteCount: voteCountSql,
+      commentCount: commentCountSql(opts.includeHidden ?? false),
+    })
     .from(ideas)
-    .where(eq(ideas.id, ideaId));
+    .where(and(...conditions));
   if (!row) return null;
   const ideaTagRows = await db
     .select({ id: tags.id, name: tags.name, color: tags.color })
