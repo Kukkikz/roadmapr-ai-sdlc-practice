@@ -87,7 +87,13 @@ Thin pass first: tokens, typography and the three core screens (public board, id
 - [x] Link redeem page ("Continue" button, display name for invites) — Stitch screen `c859b61108f64a1db7d6d6b142a1406b`
 - [x] Team dashboard (all boards, moderation queue) — Stitch screen `6963416599ed459092b933def5652cdd`
 - [x] Board settings (name, slug, visibility, tags, members, invite and share links) — Stitch screen `1a28fec14a5940728894203bd9cffcf4`
-- [ ] Delete team and delete board: a "danger zone" in settings plus type-to-confirm dialogs, and a member "Leave team" action (not yet designed in Stitch; design before building)
+- [x] Delete team and delete board: danger zone, type-to-confirm dialogs, "Leave team" and the post-delete page (Stitch screens):
+  - Board settings with danger zone `5575fc7941f04a6cb7b82dc563a80ed8` (supersedes `1a28fec1…`)
+  - Delete board dialog, nothing typed, button disabled `9a4c24a62cc04ccca0248b03b62675f8`
+  - Team settings (owner link, leave team, danger zone) `a4a2f569db3f429da37a650c0bc67677`
+  - Delete team dialog, text typed, button enabled `9b1e780952204b7398a74c32f4f72e4e`
+  - Team deleted page `803563132bba4b80958cd98ffbdacac4`
+  - Known quirks: the delete-team dialog's background shows "Leave team" enabled and bell and help icons (the owner cannot leave while sole owner, and there are no notifications); Stitch's design system copy predates the danger components in `DESIGN.md`
 
 The first versions of the submit, create-team, join, dashboard and settings screens (`ccd16f0a…`, `93f873fc…`, `d926894d…`, `69f9265c…`, `794cc163…`) are superseded: they had off-spec copy (member emails, an "Under review" status, "workspace", an invented footer). Stitch sample text is illustrative only; the app uses `SPEC.md` and `CONTEXT.md` wording (Team, Member, Owner link; no emails; statuses open/planned/in progress/shipped/declined; sort top/newest).
 
