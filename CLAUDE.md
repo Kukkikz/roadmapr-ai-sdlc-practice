@@ -8,7 +8,7 @@ Multi-tenant feedback and roadmap board. Practice project for the AI-coding-agen
 - `SPEC.md` — behaviour and acceptance criteria. Every change maps to a user story.
 - `PLAN.md` — phased task list. Work on one task at a time; tick it when done.
 - `docs/adr/` — decisions already made. Do not reverse one without asking.
-- `DESIGN.md` — design tokens (once it exists). It is the source of truth for UI styling.
+- `DESIGN.md` — design tokens and component rules. It is the source of truth for UI styling. Stitch screens (project id in `.stitch.json`) are reference only; their sample copy is illustrative.
 
 ## Stack
 
@@ -37,6 +37,8 @@ Next.js here is a newer version than the model knows: follow `AGENTS.md` and rea
 - Migrations are backwards-compatible: add before remove, never a destructive change in the same release as the code that stops using it.
 - Link tokens: store hashes only, never log them, consume on POST.
 - Never store or log IP addresses beyond the rate-limit key.
+- UI: style only with the `DESIGN.md` tokens (CSS variables and the shadcn theme in `src/app/globals.css`); never hard-code colours, fonts or radii in components. Desktop only (1024px and wider); mobile is out of MVP scope.
+- UI copy comes from `SPEC.md` and `CONTEXT.md`, not from Stitch sample text.
 - Match the surrounding code's style. No dependencies without asking.
 
 ## Workflow
@@ -45,7 +47,7 @@ Next.js here is a newer version than the model knows: follow `AGENTS.md` and rea
 2. Write tests first for security-sensitive logic (links, sessions, roles, rate limits, votes). For UI, tests may follow the code.
 3. Implement the smallest change that meets the criteria.
 4. Run lint, typecheck and tests before declaring done.
-5. If behaviour changes, update `SPEC.md` first; if a term is new or changes, update `CONTEXT.md`.
+5. If behaviour changes, update `SPEC.md` first; if a term is new or changes, update `CONTEXT.md`; if styling or a component changes, update `DESIGN.md` first and re-upload it with `stitch upload design DESIGN.md` (this creates a new Stitch design system, so tell the user).
 6. Open a PR per task. Do not merge, push to `main` or promote a production deployment without the user's say-so.
 
 ## Definition of done

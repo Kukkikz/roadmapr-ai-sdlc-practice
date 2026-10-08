@@ -136,7 +136,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 ## Non-functional requirements
 
 - **NF1 Accessibility:** all screens keyboard-navigable, labelled form fields, WCAG AA contrast, visible focus.
-- **NF2 Responsive:** public board and Idea page usable at 360 px width.
+- **NF2 Desktop only:** screens are designed and tested for viewports of 1024 px and wider. Mobile and tablet layouts are out of MVP scope.
 - **NF3 Performance:** Idea list uses no N+1 queries (vote and comment counts aggregated in the query).
 - **NF4 SEO:** public board and Idea pages have title, description and Open Graph tags; Private boards are `noindex`.
 - **NF5 Parity:** the same migrations and integration tests pass on PGlite and on real Postgres.
@@ -150,4 +150,4 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 
 ## Out of scope
 
-Attachments, OAuth, custom domains, billing, real-time updates, merging Ideas, email of any kind, passwords or accounts, visitor edit/delete, team recovery and deletion.
+Attachments, OAuth, custom domains, billing, real-time updates, mobile and tablet layouts, merging Ideas, email of any kind, passwords or accounts, visitor edit/delete, team recovery and deletion.
