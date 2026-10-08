@@ -55,9 +55,9 @@ A multi-tenant feedback board where teams collect ideas, let visitors upvote ano
 ### Project Scaffolding
 
 - [x] Initialise Next.js + TypeScript + ESLint + Prettier (Vitest and Playwright smoke tests included)
-- [ ] Set up Drizzle with PGlite for local dev (done: PGlite migrations and tests pass; still to verify: Neon driver and `test:pg` against a real Postgres)
+- [ ] Set up Drizzle with PGlite for local dev (done: PGlite migrations and tests pass, and the same tests pass on real Postgres in CI; still to verify: the Neon driver against a real Neon database)
 - [x] Add `.env.example` and env validation (zod)
-- [ ] Set up GitHub repo, branch protection, and CI skeleton (workflow written in `.github/workflows/ci.yml` but not yet run; repo, remote and branch protection still to do)
+- [x] Set up GitHub repo, branch protection, and CI skeleton (public repo `Kukkikz/roadmapr-ai-sdlc-practice`; `main` requires a PR and the three CI checks, no force-push, linear history, applies to admins)
 
 ---
 
