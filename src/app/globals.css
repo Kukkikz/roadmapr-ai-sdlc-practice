@@ -20,7 +20,6 @@
   --surface-dark: #181d26;
   --signature-forest: #0a2e0e;
   --signature-cream: #f5e9d4;
-  --signature-coral: #aa2d00;
   --status-open-bg: #e0e2e6;
   --status-planned-bg: #cfe0fb;
   --status-in-progress-bg: #f4d35e;
@@ -33,7 +32,6 @@
   --info: #254fad;
   --info-border: #458fff;
   --success: #006400;
-  --success-border: #39bf45;
   --danger: #aa2d00;
 
   /* shadcn aliases */

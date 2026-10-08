@@ -65,7 +65,7 @@ A multi-tenant feedback board where teams collect ideas, let visitors upvote ano
 
 ### Design System
 
-- [x] Define brand tone, colours, typography in Stitch (`DESIGN.md` uploaded; Stitch project "Roadmapr" id `7208899953600583130`, current design system id `5046df3c154341a381a0748a09305b70`; the earlier `14df3a9e…` is still in the project and the existing screens were generated with it. Re-uploading `DESIGN.md` creates a new design system each time)
+- [x] Define brand tone, colours, typography in Stitch (`DESIGN.md` uploaded; Stitch project "Roadmapr" id `7208899953600583130`, the only design system is `5046df3c154341a381a0748a09305b70`; the duplicate `14df3a9e…` was deleted in the Stitch UI. Re-uploading `DESIGN.md` creates a new design system each time, and the CLI cannot delete one)
 - [x] Commit `DESIGN.md` (and `.stitch.json`) through a PR
 - [x] Stitch CLI installed and authenticated; Stitch agent skill installed in `.claude/skills/stitch` (git-ignored)
 - [ ] Stitch Loop workspace: deferred until the Next.js app has a dev server to capture (create workspace then; confirm before binding or uploading code)

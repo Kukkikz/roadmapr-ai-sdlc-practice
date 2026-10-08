@@ -17,7 +17,6 @@ colors:
   surface-dark: "#181d26"
   signature-forest: "#0a2e0e"
   signature-cream: "#f5e9d4"
-  signature-coral: "#aa2d00"
   status-open-bg: "#e0e2e6"
   status-planned-bg: "#cfe0fb"
   status-in-progress-bg: "#f4d35e"
@@ -30,7 +29,6 @@ colors:
   info: "#254fad"
   info-border: "#458fff"
   success: "#006400"
-  success-border: "#39bf45"
   danger: "#aa2d00"
 
 typography:
@@ -121,6 +119,10 @@ components:
   button-primary-active:
     backgroundColor: "{colors.primary-active}"
     textColor: "{colors.on-primary}"
+    rounded: "{rounded.lg}"
+  button-primary-disabled:
+    backgroundColor: "{colors.surface-strong}"
+    textColor: "{colors.muted}"
     rounded: "{rounded.lg}"
   button-secondary:
     backgroundColor: "{colors.canvas}"
@@ -243,9 +245,27 @@ components:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
     rounded: "{rounded.sm}"
+  text-input-disabled:
+    backgroundColor: "{colors.surface-soft}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.sm}"
+  field-error-text:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.danger}"
+    typography: "{typography.caption}"
+  alert-error:
+    backgroundColor: "{colors.status-declined-bg}"
+    textColor: "{colors.danger}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.md}"
+    padding: 12px 16px
   text-link:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.link}"
+    typography: "{typography.body-md}"
+  text-link-active:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.link-active}"
     typography: "{typography.body-md}"
   empty-state:
     backgroundColor: "{colors.surface-soft}"
@@ -253,6 +273,15 @@ components:
     typography: "{typography.body-md}"
     rounded: "{rounded.lg}"
     padding: 48px
+  divider:
+    backgroundColor: "{colors.hairline}"
+    height: 1px
+  divider-strong:
+    backgroundColor: "{colors.border-strong}"
+    height: 1px
+  focus-ring:
+    backgroundColor: "{colors.info-border}"
+    height: 2px
 ---
 
 ## Overview
@@ -301,7 +330,7 @@ Each idea status has a fixed background and a text colour that meets 4.5:1 contr
 ### Semantic
 
 - **Link** (`{colors.link}`) is for inline links only, never for buttons. **Link active** (`{colors.link-active}`) is the pressed state.
-- **Info border** (`{colors.info-border}`) is the focus ring and focused-input outline. **Success** (`{colors.success}`) and **Danger** (`{colors.danger}`) are for confirmation and error messages.
+- **Info border** (`{colors.info-border}`) is the focus ring and focused-input outline. **Success** (`{colors.success}`) is the text colour of the `shipped` badge. **Danger** (`{colors.danger}`) is for error messages and invalid inputs (`alert-error`, `text-input-error`).
 
 ## Typography
 
@@ -360,6 +389,8 @@ Only Default, Active (pressed) and Focus states are specified.
 - **`signature-dark-card`:** used for the **save-your-owner-link** state after creating a Team, with the link in a mono block, a copy button and a plain warning that it is shown once. `signature-forest-card` is for a board's first-run empty state.
 - **`text-input` / `text-input-focus`:** 44px tall, 1px hairline border, focus border `{colors.info-border}`. Each field has a visible label above it; error text is `{colors.danger}` below the field.
 - **`empty-state`:** `{colors.surface-soft}` panel with a short sentence and one primary action.
+- **Lines (`divider`, `divider-strong`, `focus-ring`):** the format has no border property, so borders are specified as thin line components. `divider` is the 1px `{colors.hairline}` border on cards, inputs, secondary buttons and between sections. `divider-strong` is the 1px `{colors.border-strong}` outline on disabled controls. `focus-ring` is the 2px `{colors.info-border}` ring on a focused control and the border of a focused input.
+- **`button-primary-disabled`, `text-input-disabled`:** disabled controls are muted, never hidden. **`alert-error` and `field-error-text`:** errors use `{colors.danger}` on the soft red `{colors.status-declined-bg}`, with the message in text, not colour alone. **`text-link-active`:** the pressed state of a link.
 
 ## Do's and Don'ts
 
