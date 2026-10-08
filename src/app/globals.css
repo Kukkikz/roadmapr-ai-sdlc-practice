@@ -33,6 +33,7 @@
   --info-border: #458fff;
   --success: #006400;
   --danger: #aa2d00;
+  --scrim: rgba(24, 29, 38, 0.4);
 
   /* shadcn aliases */
   --background: var(--canvas);

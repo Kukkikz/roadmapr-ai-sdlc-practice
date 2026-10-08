@@ -30,6 +30,7 @@ colors:
   info-border: "#458fff"
   success: "#006400"
   danger: "#aa2d00"
+  scrim: "rgba(24, 29, 38, 0.4)"
 
 typography:
   display-lg:
@@ -273,6 +274,37 @@ components:
     typography: "{typography.body-md}"
     rounded: "{rounded.lg}"
     padding: 48px
+  button-danger:
+    backgroundColor: "{colors.danger}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.button}"
+    rounded: "{rounded.lg}"
+    padding: 12px 24px
+  button-danger-disabled:
+    backgroundColor: "{colors.surface-strong}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.lg}"
+  button-danger-secondary:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.danger}"
+    typography: "{typography.button}"
+    rounded: "{rounded.lg}"
+    padding: 12px 24px
+  danger-zone:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.danger}"
+    typography: "{typography.title-md}"
+    rounded: "{rounded.md}"
+    padding: 24px
+  confirm-dialog:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.lg}"
+    padding: 24px
+    width: 560px
+  dialog-scrim:
+    backgroundColor: "{colors.scrim}"
   divider:
     backgroundColor: "{colors.hairline}"
     height: 1px
@@ -389,6 +421,7 @@ Only Default, Active (pressed) and Focus states are specified.
 - **`signature-dark-card`:** used for the **save-your-owner-link** state after creating a Team, with the link in a mono block, a copy button and a plain warning that it is shown once. `signature-forest-card` is for a board's first-run empty state.
 - **`text-input` / `text-input-focus`:** 44px tall, 1px hairline border, focus border `{colors.info-border}`. Each field has a visible label above it; error text is `{colors.danger}` below the field.
 - **`empty-state`:** `{colors.surface-soft}` panel with a short sentence and one primary action.
+- **Destructive actions (`button-danger`, `button-danger-secondary`, `danger-zone`, `confirm-dialog`, `dialog-scrim`):** deleting a Team or Board is permanent, so it is never one click. On a settings page it lives in a **danger zone** at the bottom: a section titled in `{colors.danger}` with a plain explanation and a `button-danger-secondary` (white, danger text) that opens a **confirm dialog**. The dialog is a 560px white card on a `dialog-scrim`, states exactly what will be lost, asks the Owner to type the Team slug or Board name, and has a secondary "Cancel" plus a `button-danger`. The danger button stays `button-danger-disabled` until the typed text matches exactly. Inside the dialog the danger button is the one primary action. Danger red is used only for destructive actions and errors.
 - **Lines (`divider`, `divider-strong`, `focus-ring`):** the format has no border property, so borders are specified as thin line components. `divider` is the 1px `{colors.hairline}` border on cards, inputs, secondary buttons and between sections. `divider-strong` is the 1px `{colors.border-strong}` outline on disabled controls. `focus-ring` is the 2px `{colors.info-border}` ring on a focused control and the border of a focused input.
 - **`button-primary-disabled`, `text-input-disabled`:** disabled controls are muted, never hidden. **`alert-error` and `field-error-text`:** errors use `{colors.danger}` on the soft red `{colors.status-declined-bg}`, with the message in text, not colour alone. **`text-link-active`:** the pressed state of a link.
 
@@ -408,6 +441,8 @@ Only Default, Active (pressed) and Focus states are specified.
 - Don't use bold (600+) type or pill shapes.
 - Don't introduce accent colours outside this file.
 - Don't use colour alone to convey status.
+- Don't use `{colors.danger}` for anything except destructive actions and errors.
+- Don't let a permanent deletion happen without a typed confirmation.
 
 ## Responsive Behavior
 
