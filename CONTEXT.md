@@ -40,6 +40,16 @@ A Member who can also manage links, remove Members and manage Boards. A Team alw
 Whoever authors an Idea, Vote or Comment: either a Visitor or a Member. A Member always acts as themselves, never as their anonymous cookie.
 _Avoid_: Author (ambiguous), voter
 
+## Ending membership and content
+
+**Remove**:
+To take a Member out of a Team (an Owner removes someone, or a Member leaves). The person loses access, but the Ideas and Comments they wrote stay and keep their display name.
+_Avoid_: Delete a member, kick, ban
+
+**Delete**:
+To permanently erase a Team or a Board together with everything inside it. There is no undo. Ideas and Comments are never deleted, only hidden.
+_Avoid_: Archive, deactivate, remove (reserved for Members)
+
 ## Access links
 
 **Owner link**:

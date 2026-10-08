@@ -11,6 +11,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 - **G5 Rate limits.** Limited actions return a clear "slow down" error, never a crash. Counters live in the `rate_limits` table.
 - **G6 Slugs.** Team and board slugs are lowercase, URL-safe, unique (team slug globally, board slug per team), and cannot be a reserved word (`login`, `api`, `dashboard`, `join`, ...).
 - **G7 Statuses.** `open` (default), `planned`, `in_progress`, `shipped`, `declined`. Any transition is allowed; every change is recorded.
+- **G8 Removal and deletion.** Members are _removed_ softly (row kept, `removed_at` set, history stays attributed). Teams and Boards are _deleted_ for good, cascading to everything beneath them, after the Owner types a confirmation. Ideas and Comments are never deleted, only hidden (a Tag's deletion removes it from Ideas).
 
 ## Epic 1 — Visitors browse boards
 
@@ -84,8 +85,21 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 
 **US-3.4** As an Owner, I can remove a Member.
 
-- AC: The removed Member's sessions end immediately.
+- AC: Removal is soft: the Member row is kept with `removed_at` set, so the Member's past Ideas and Comments keep their display name and team label.
+- AC: The removed Member's sessions end immediately, and they can no longer act on the Team.
 - AC: The last Owner cannot be removed.
+
+**US-3.7** As a Member, I can leave the Team.
+
+- AC: Leaving is the same soft removal as US-3.4, applied to myself, and ends my sessions.
+- AC: The last Owner cannot leave; they delete the Team instead (US-3.8).
+
+**US-3.8** As an Owner, I can delete the Team.
+
+- AC: I must type the Team slug to confirm, and the screen states what will be lost (all Boards, Ideas, Votes, Comments, Tags, Members and links).
+- AC: Deletion is permanent and cascades to everything under the Team; there is no undo.
+- AC: Every Owner link, Member invite link, Board share link and session of the Team stops working; Visitors get the generic "not found" page.
+- AC: The Team slug is freed immediately and can be claimed by a new Team.
 
 **US-3.5** As a Member, I can sign out.
 
@@ -95,6 +109,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 
 - AC: Every protected action calls `requireRole(team, "owner" | "member")`.
 - AC: A Member from Team A can never act on Team B. An Owner-only action by a plain Member is rejected.
+- AC: Owner-only actions include removing Members, generating and revoking links, editing Boards and deleting a Board or the Team.
 
 ## Epic 4 — Boards
 
@@ -107,6 +122,13 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 
 - AC: Generate and rotate the Board share link; rotating invalidates the old one and access previously granted by it.
 - AC: Switching visibility changes who can see content; nothing is deleted.
+
+**US-4.3** As an Owner, I can delete a Board.
+
+- AC: I must type the Board name to confirm, and the screen states what will be lost (its Ideas, Votes, Comments, Tags and share link).
+- AC: Deletion is permanent and cascades to the Board's Ideas and everything under them, its Tags and its Board share link; there is no undo.
+- AC: The Board URL returns the generic "not found" page, and its slug is freed for the Team.
+- AC: A Team may have zero Boards; the dashboard then offers "Create board".
 
 ## Epic 5 — Roadmap and moderation (Members)
 
@@ -147,7 +169,8 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 - Votes are tied to a cookie; clearing cookies allows revoting.
 - Whoever holds a link has its access until it is revoked or rotated.
 - A lost Owner link with no signed-in session means a lost Team.
+- Deleting a Team or Board is permanent. A freed Team slug can be claimed by someone else, so old URLs may later open a different Team.
 
 ## Out of scope
 
-Attachments, OAuth, custom domains, billing, real-time updates, mobile and tablet layouts, merging Ideas, email of any kind, passwords or accounts, visitor edit/delete, team recovery and deletion.
+Attachments, OAuth, custom domains, billing, real-time updates, mobile and tablet layouts, merging Ideas, email of any kind, passwords or accounts, visitor edit/delete, team recovery and undo of deletions.
