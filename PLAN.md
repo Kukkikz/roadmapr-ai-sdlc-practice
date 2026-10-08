@@ -65,28 +65,37 @@ A multi-tenant feedback board where teams collect ideas, let visitors upvote ano
 
 ### Design System
 
-- [ ] Define brand tone, colours, typography in Stitch
-- [ ] Export `DESIGN.md` and commit it
-- [x] Stitch CLI installed and authenticated; Stitch agent skill installed in `.agents/skills/stitch`
+- [x] Define brand tone, colours, typography in Stitch (`DESIGN.md` uploaded; Stitch project "Roadmapr" id `7208899953600583130`, current design system id `5046df3c154341a381a0748a09305b70`; the earlier `14df3a9e…` is still in the project and the existing screens were generated with it. Re-uploading `DESIGN.md` creates a new design system each time)
+- [x] Commit `DESIGN.md` (and `.stitch.json`) through a PR
+- [x] Stitch CLI installed and authenticated; Stitch agent skill installed in `.claude/skills/stitch` (git-ignored)
 - [ ] Stitch Loop workspace: deferred until the Next.js app has a dev server to capture (create workspace then; confirm before binding or uploading code)
-- [ ] Connect Stitch MCP to the coding agent (fallback if unavailable: agent builds from `DESIGN.md` alone)
-- [ ] `DESIGN.md` is the source of truth for tokens; Stitch screens are reference only; change requests update `DESIGN.md` first
-- [ ] Use shadcn/ui configured from the `DESIGN.md` tokens
+- [x] Stitch access for the coding agent: via the Stitch CLI and skill (the skill says not to use the MCP server), so no MCP setup needed
+- [x] `DESIGN.md` is the source of truth for tokens; Stitch screens are reference only; change requests update `DESIGN.md` first (rule in `CLAUDE.md`; `tests/design-tokens.test.ts` fails if the CSS colours or radii drift from `DESIGN.md`)
+- [x] Use shadcn/ui configured from the `DESIGN.md` tokens (Radix base; Inter and JetBrains Mono via `next/font`; button, badge, input, textarea, card and label themed from the tokens; no dark mode)
 
 ### Screens
 
 Thin pass first: tokens, typography and the three core screens (public board, idea detail, redeem/save-link). Design the rest just before each is built.
 
-- [ ] Public board page (idea list, sort, filter by status/tag, search)
-- [ ] Idea detail page (description, votes, comments, status badge, tags)
-- [ ] Submit idea form/modal
-- [ ] Roadmap view (columns: planned / in progress / shipped)
-- [ ] Create-team page + "save your owner link" state
-- [ ] Link redeem page ("Continue" button, display name for invites)
-- [ ] Team dashboard (all boards, moderation queue)
-- [ ] Board settings (name, slug, visibility, tags, members, invite and share links)
-- [ ] Empty, loading and error states for every screen
-- [ ] Mobile layouts for the public board and idea detail
+- [x] Public board page (idea list, sort, filter by status/tag, search) — Stitch screen `504be753664243cf873cfd26497bcdff` (corrected version; the original `ff29f6b9d83b4802b8bcd1d7849838c6` is superseded)
+- [x] Idea detail page (description, votes, comments, status badge, tags) — Stitch screen `7be6abe824164eb2982f44eeb4dce3ab`
+- [x] Submit idea form/modal — Stitch screen `cd79c35249f64e6faaf2f81b7e7a992d`
+- [x] Roadmap view (columns: planned / in progress / shipped) — Stitch screen `15c97972d8fa48b8bb4ec3ee26dc03ac`
+- [x] Create-team page + "save your owner link" state — Stitch screens `984839590cb349379438475d44e213f6` (form) and `a3f2236179c8435586416a9e6d108703` (save link)
+- [x] Link redeem page ("Continue" button, display name for invites) — Stitch screen `c859b61108f64a1db7d6d6b142a1406b`
+- [x] Team dashboard (all boards, moderation queue) — Stitch screen `6963416599ed459092b933def5652cdd`
+- [x] Board settings (name, slug, visibility, tags, members, invite and share links) — Stitch screen `1a28fec14a5940728894203bd9cffcf4`
+
+The first versions of the submit, create-team, join, dashboard and settings screens (`ccd16f0a…`, `93f873fc…`, `d926894d…`, `69f9265c…`, `794cc163…`) are superseded: they had off-spec copy (member emails, an "Under review" status, "workspace", an invented footer). Stitch sample text is illustrative only; the app uses `SPEC.md` and `CONTEXT.md` wording (Team, Member, Owner link; no emails; statuses open/planned/in progress/shipped/declined; sort top/newest).
+
+- [x] Empty, loading and error states (the set that matters for the MVP; Stitch screen ids):
+  - Board: loading `6e0c7d43dd924dde9c42079e8e4b36c2`, empty `8b938a370bc94206a672650670c216f2`, no search results `858d718b36d248ab9c07a3a7dcdedd42`
+  - Idea detail: loading `38d9e06bc0f6438e93ad16b558f114bf`, no comments plus rate-limit error `44fcdec60d25435ea3e4f503efea5622`
+  - Roadmap: empty `42ff71e0bd374dbdbfb09eef81d27652`
+  - Dashboard: queue empty `3dae060ebd874154bc54130ab6e6fe08`, loading `599c73d1080943fabcb08d7b227defaf` (the first versions `97d201ff…` and `079d3119…` are superseded: they showed a "Queue hygiene" note that contradicts post-moderation)
+  - Submit dialog rate-limited: `035fbcc8cc0e40769bf4cbab7a83e31f`
+  - Pages: not found `f4548d133cb046fd9e076c81406e5ab6`, link not valid `1ea3493f8aac4bf59639cb09ebc1b363`, server error `606430143f464749a0e186cfa938f224`
+  - Not designed (reuse the patterns above when built): roadmap and board-settings loading, empty tag and member lists in settings, and an error state for the save-link screen. The server-error page says "Your input was not lost"; confirm the app can keep that promise or reword it.
 
 ---
 
@@ -187,7 +196,7 @@ Thin pass first: tokens, typography and the three core screens (public board, id
 
 ### UX
 
-- [ ] Responsive check on mobile / tablet / desktop
+- [ ] Desktop layout check (1024px and wider); mobile and tablet are out of MVP scope
 - [ ] Accessibility pass (keyboard navigation, labels, contrast)
 - [ ] SEO basics for public board pages (titles, meta, Open Graph)
 
@@ -241,6 +250,7 @@ Thin pass first: tokens, typography and the three core screens (public board, id
 - Custom domains per board
 - Billing/plans
 - Real-time updates (websockets)
+- Mobile and tablet layouts (desktop only for the MVP)
 - Merging duplicate ideas (team members can only hide duplicates)
 - Email of any kind (sign-in, invites, notifications), passwords, user accounts
 - Visitors editing or deleting their own ideas/comments

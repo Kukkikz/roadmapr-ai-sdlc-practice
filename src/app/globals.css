@@ -1,26 +1,127 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+/*
+ * Design tokens. Source of truth: DESIGN.md. Raw tokens use the DESIGN.md names;
+ * the shadcn aliases below point at them. tests/design-tokens.test.ts fails if a
+ * colour here drifts from DESIGN.md, so change DESIGN.md first.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #181d26;
+  --primary-active: #0d1218;
+  --ink: #181d26;
+  --body: #333840;
+  --muted: #41454d;
+  --hairline: #dddddd;
+  --border-strong: #9297a0;
+  --canvas: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-strong: #e0e2e6;
+  --surface-dark: #181d26;
+  --signature-forest: #0a2e0e;
+  --signature-cream: #f5e9d4;
+  --signature-coral: #aa2d00;
+  --status-open-bg: #e0e2e6;
+  --status-planned-bg: #cfe0fb;
+  --status-in-progress-bg: #f4d35e;
+  --status-shipped-bg: #a8d8c4;
+  --status-declined-bg: #f6d9cf;
+  --on-primary: #ffffff;
+  --on-dark: #ffffff;
+  --link: #1b61c9;
+  --link-active: #1a3866;
+  --info: #254fad;
+  --info-border: #458fff;
+  --success: #006400;
+  --success-border: #39bf45;
+  --danger: #aa2d00;
+
+  /* shadcn aliases */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--canvas);
+  --card-foreground: var(--ink);
+  --popover: var(--canvas);
+  --popover-foreground: var(--ink);
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--canvas);
+  --secondary-foreground: var(--ink);
+  --muted-surface: var(--surface-soft);
+  --muted-foreground: var(--muted);
+  --accent: var(--surface-soft);
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--info-border);
 }
 
 @theme inline {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-heading: var(--font-sans);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-surface);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-hairline: var(--hairline);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-surface-dark: var(--surface-dark);
+  --color-on-dark: var(--on-dark);
+  --color-forest: var(--signature-forest);
+  --color-cream: var(--signature-cream);
+  --color-link: var(--link);
+  --color-link-active: var(--link-active);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-status-open: var(--status-open-bg);
+  --color-status-planned: var(--status-planned-bg);
+  --color-status-in-progress: var(--status-in-progress-bg);
+  --color-status-shipped: var(--status-shipped-bg);
+  --color-status-declined: var(--status-declined-bg);
+
+  /* Radii: 6 / 10 / 12px, see DESIGN.md "Shapes". */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-sm text-foreground antialiased;
+    line-height: 1.45;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-normal;
+  }
 }
