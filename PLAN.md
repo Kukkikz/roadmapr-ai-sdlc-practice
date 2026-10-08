@@ -112,17 +112,17 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 ### Schema & Migrations
 
-- [ ] Implement schema for all tables above, following `docs/database-er-diagram.md`: check constraints, composite same-board foreign keys on `idea_tags`, `ON DELETE CASCADE` down the tree (team, board, idea, tag), indexes
-- [ ] Verify PGlite supports the generated `tsvector` column and GIN index before relying on them
-- [ ] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon)
-- [ ] Integration tests: cascade deletes (team, board, idea children), member soft-removal keeps attribution, link-shape and `actor_id` check constraints
-- [ ] Seed script: 1 team, 2 boards, sample ideas, votes, comments, tags
+- [x] Implement schema for all tables above, following `docs/database-er-diagram.md`: check constraints, composite same-board foreign keys on `idea_tags`, `ON DELETE CASCADE` down the tree (team, board, idea, tag), indexes
+- [x] Verify PGlite supports the generated `tsvector` column and GIN index before relying on them (tested in `tests/schema.test.ts` and `tests/data.test.ts`)
+- [ ] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon) (done: `drizzle/0001_*.sql` applies on PGlite; real Postgres runs in CI; still to verify: Neon)
+- [x] Integration tests: cascade deletes (team, board, idea children), member soft-removal keeps attribution, link-shape and `actor_id` check constraints
+- [x] Seed script (`npm run db:seed`): 1 team, 2 boards, sample ideas, votes, comments, tags
 
 ### Data Access Layer
 
-- [ ] Repository/service functions for boards, ideas, votes, comments, tags
-- [ ] Idea list queries: sort by top / newest, filter by status and tag, keyword search (Postgres full-text search with a GIN index, behind one data-access function; no extensions)
-- [ ] Vote count computed efficiently (no N+1 queries)
+- [x] Repository/service functions for boards, ideas, votes, comments, tags (`src/data/`)
+- [x] Idea list queries: sort by top / newest, filter by status and tag, keyword search (Postgres full-text search with a GIN index, behind one data-access function; no extensions)
+- [x] Vote count computed efficiently (no N+1 queries)
 
 ---
 

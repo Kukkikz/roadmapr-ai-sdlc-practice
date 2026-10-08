@@ -1,6 +1,6 @@
 # Database ER diagram
 
-Status: **approved design, not yet implemented** (Phase 2). Terms follow [`CONTEXT.md`](../CONTEXT.md); behaviour follows [`SPEC.md`](../SPEC.md). Single Postgres schema (Drizzle `pg-core`) for PGlite locally and Neon in production, see [ADR 0001](adr/0001-pglite-local-postgres-everywhere.md).
+Status: **implemented** in `src/db/schema.ts` (migration `drizzle/0001_*.sql`). Terms follow [`CONTEXT.md`](../CONTEXT.md); behaviour follows [`SPEC.md`](../SPEC.md). Single Postgres schema (Drizzle `pg-core`) for PGlite locally and Neon in production, see [ADR 0001](adr/0001-pglite-local-postgres-everywhere.md).
 
 Solid lines are real foreign keys. Dotted lines are "soft" links through `actor_id`, a plain string (`anon:<cookie-id>` or `member:<member-id>`) with no foreign key, so a Visitor's cookie and a Member can author the same kinds of rows.
 
@@ -162,5 +162,5 @@ Vote counts and comment counts are aggregated by query (no counter columns, SPEC
 
 ## Open items to verify during implementation
 
-- That PGlite supports a generated `tsvector` column and a GIN index (also in the Phase 2 task list).
-- That Drizzle expresses the composite foreign keys, partial index and check constraints; if not, hand-write them in the migration.
+- Verified: PGlite supports the generated `tsvector` column and GIN index; Drizzle expresses the composite foreign keys, partial index and check constraints, so the migration is fully generated.
+- Still to verify: the migration against a real Neon database.
