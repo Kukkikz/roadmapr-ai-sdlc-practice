@@ -26,7 +26,9 @@ A multi-tenant feedback board where teams collect ideas, let visitors upvote ano
 | Team member | Member invite link (picks a display name)                         | All visitor actions + change status, manage tags, hide ideas, reply as team                                 |
 | Team owner  | Owner link (shown once when the team is created)                  | All member actions + create/revoke invite and share links, remove members, manage boards and board settings |
 
-## Data Model (draft)
+## Data Model
+
+Full ER diagram, constraints and indexes: [`docs/database-er-diagram.md`](docs/database-er-diagram.md).
 
 - `teams` (id, name, slug)
 - `members` (id, team_id, display_name, role: owner | member, removed_at nullable)
@@ -40,7 +42,7 @@ A multi-tenant feedback board where teams collect ideas, let visitors upvote ano
 - `sessions` (hashed token, member_id, expires_at)
 - `rate_limits` (key, window_start, count)
 
-`actor_id` is `anon:<cookie-id>` or `member:<member-id>`. Owner links are bound to the owner's `member_id` and can start a session on any device; member invite links create a new member when redeemed; board share links grant a visitor access to one private board (recorded in the visitor's signed cookie). Statuses: open, planned, in_progress, shipped, declined (plain text + check constraint, no native enum).
+`actor_id` is `anon:<cookie-id>` or `member:<member-id>`. Owner links are bound to the owner's `member_id` and can start a session on any device; member invite links create a new member when redeemed; board share links grant a visitor access to one private board (recorded in the visitor's signed cookie). Statuses: open, planned, in_progress, shipped, declined (plain text + check constraint, no native enum). Deleting a team or board is a hard delete that cascades down the tree; members are only soft-removed (`removed_at`) so history keeps their display name.
 
 ---
 
@@ -85,6 +87,7 @@ Thin pass first: tokens, typography and the three core screens (public board, id
 - [x] Link redeem page ("Continue" button, display name for invites) — Stitch screen `c859b61108f64a1db7d6d6b142a1406b`
 - [x] Team dashboard (all boards, moderation queue) — Stitch screen `6963416599ed459092b933def5652cdd`
 - [x] Board settings (name, slug, visibility, tags, members, invite and share links) — Stitch screen `1a28fec14a5940728894203bd9cffcf4`
+- [ ] Delete team and delete board: a "danger zone" in settings plus type-to-confirm dialogs, and a member "Leave team" action (not yet designed in Stitch; design before building)
 
 The first versions of the submit, create-team, join, dashboard and settings screens (`ccd16f0a…`, `93f873fc…`, `d926894d…`, `69f9265c…`, `794cc163…`) are superseded: they had off-spec copy (member emails, an "Under review" status, "workspace", an invented footer). Stitch sample text is illustrative only; the app uses `SPEC.md` and `CONTEXT.md` wording (Team, Member, Owner link; no emails; statuses open/planned/in progress/shipped/declined; sort top/newest).
 
@@ -103,8 +106,10 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 ### Schema & Migrations
 
-- [ ] Implement schema for all tables above
+- [ ] Implement schema for all tables above, following `docs/database-er-diagram.md`: check constraints, composite same-board foreign keys on `idea_tags`, `ON DELETE CASCADE` down the tree (team, board, idea, tag), indexes
+- [ ] Verify PGlite supports the generated `tsvector` column and GIN index before relying on them
 - [ ] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon)
+- [ ] Integration tests: cascade deletes (team, board, idea children), member soft-removal keeps attribution, link-shape and `actor_id` check constraints
 - [ ] Seed script: 1 team, 2 boards, sample ideas, votes, comments, tags
 
 ### Data Access Layer
@@ -158,13 +163,15 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 - [ ] Create team and first board (anyone, rate limited per IP); show the owner link once
 - [ ] Owner generates member invite links (7-day expiry, multi-use, revocable); redeeming asks for a display name
 - [ ] Owner can generate a replacement owner link while signed in; a lost owner link with no signed-in session means a lost team (documented limitation)
-- [ ] Owner removes members; the last owner can never be removed
+- [ ] Owner removes members (soft removal: `removed_at`, sessions ended, history keeps their name); the last owner can never be removed; a member can leave the team, and the last owner leaves by deleting the team
+- [ ] Owner deletes the team: type the slug to confirm, permanent cascade, all links and sessions stop working, slug freed immediately
 - [ ] Authorisation helper: `requireRole(team, "owner" | "member")` used by all protected actions
 
 ### Boards
 
 - [ ] Create/edit boards under a team (unique slug per team), with visibility public or private
 - [ ] Private boards: owner generates and rotates a board share link; visitors without it get a 404
+- [ ] Owner deletes a board: type the board name to confirm, permanent cascade, URL returns not found; a team may have zero boards
 - [ ] Public URL structure: `/{team-slug}/{board-slug}`
 
 ---
@@ -254,7 +261,7 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 - Merging duplicate ideas (team members can only hide duplicates)
 - Email of any kind (sign-in, invites, notifications), passwords, user accounts
 - Visitors editing or deleting their own ideas/comments
-- Account/team recovery and team deletion
+- Account/team recovery and undoing a deletion (deleting a team or board is allowed and permanent)
 
 ## Known Limitations
 

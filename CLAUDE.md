@@ -8,6 +8,8 @@ Multi-tenant feedback and roadmap board. Practice project for the AI-coding-agen
 - `SPEC.md` — behaviour and acceptance criteria. Every change maps to a user story.
 - `PLAN.md` — phased task list. Work on one task at a time; tick it when done.
 - `docs/adr/` — decisions already made. Do not reverse one without asking.
+- `docs/database-er-diagram.md` — the data model: tables, constraints, cascade rules, indexes. Keep it in sync with `src/db/schema.ts`.
+- [`AGENTS.md`](AGENTS.md) — Next.js agent rules. This Next.js version differs from what models know, so read the docs it points to before writing Next code. `next dev` maintains that file; do not edit it by hand.
 - `DESIGN.md` — design tokens and component rules. It is the source of truth for UI styling. Stitch screens (project id in `.stitch.json`) are reference only; their sample copy is illustrative.
 
 ## Stack
@@ -26,7 +28,7 @@ Keep these names and update this section when they change.
 - `npm run db:generate` — create a migration from `src/db/schema.ts`; `npm run db:migrate` — apply migrations (Neon if `DATABASE_URL`, else local PGlite)
 - `db:seed` arrives in Phase 2.
 
-Next.js here is a newer version than the model knows: follow `AGENTS.md` and read `node_modules/next/dist/docs/` before writing Next code. `cacheComponents` is on in `next.config.ts`.
+Next.js here is a newer version than the model knows: follow [`AGENTS.md`](AGENTS.md) and read `node_modules/next/dist/docs/` before writing Next code. `cacheComponents` is on in `next.config.ts`.
 
 ## Conventions
 
@@ -35,6 +37,8 @@ Next.js here is a newer version than the model knows: follow `AGENTS.md` and rea
 - Validate all input with zod at the boundary. Env vars are validated once in one module.
 - Keep the schema portable across PGlite and Postgres: no extensions, no native enums (text + check constraint), app-generated string IDs.
 - Migrations are backwards-compatible: add before remove, never a destructive change in the same release as the code that stops using it.
+- Schema changes follow `docs/database-er-diagram.md`; update that file in the same PR. `actor_id` is a plain string (`anon:<cookie>` or `member:<id>`), never a foreign key.
+- Removal vs deletion (`SPEC.md` G8): Teams and Boards are deleted for good, cascading down the tree, only through the Owner's type-to-confirm flow. Members are removed softly (`removed_at`) so history keeps their name. Ideas and Comments are never deleted, only hidden.
 - Link tokens: store hashes only, never log them, consume on POST.
 - Never store or log IP addresses beyond the rate-limit key.
 - UI: style only with the `DESIGN.md` tokens (CSS variables and the shadcn theme in `src/app/globals.css`); never hard-code colours, fonts or radii in components. Desktop only (1024px and wider); mobile is out of MVP scope.
@@ -48,7 +52,7 @@ Next.js here is a newer version than the model knows: follow `AGENTS.md` and rea
 3. Implement the smallest change that meets the criteria.
 4. Run lint, typecheck and tests before declaring done.
 5. If behaviour changes, update `SPEC.md` first; if a term is new or changes, update `CONTEXT.md`; if styling or a component changes, update `DESIGN.md` first and re-upload it with `stitch upload design DESIGN.md` (this creates a new Stitch design system, so tell the user).
-6. Open a PR per task. Do not merge, push to `main` or promote a production deployment without the user's say-so.
+6. Work on a branch and open a PR per task. `main` is protected: it needs a PR and the three CI checks (lint/typecheck/unit, real-Postgres integration, Playwright e2e). Do not merge, push to `main` or promote a production deployment without the user's say-so.
 
 ## Definition of done
 
@@ -56,8 +60,8 @@ Next.js here is a newer version than the model knows: follow `AGENTS.md` and rea
 - E2E passes for changed user flows.
 - Acceptance criteria in `SPEC.md` are covered by tests.
 - The review subagent's report on the diff is addressed; blocking findings are fixed or dismissed by the user in the PR.
-- `PLAN.md`, `SPEC.md` and `CONTEXT.md` still match the code.
+- `PLAN.md`, `SPEC.md`, `CONTEXT.md` and `docs/database-er-diagram.md` still match the code.
 
 ## Ask before
 
-Adding a dependency, changing the schema in a non-additive way, touching auth or link handling, changing a documented decision, deploying, or anything that sends data outside this repo.
+Adding a dependency, changing the schema in a non-additive way (including any cascade or delete rule), touching auth or link handling, changing a documented decision, re-uploading `DESIGN.md` to Stitch (each upload creates another design system, and the Stitch CLI cannot delete screens or design systems), deploying, or anything that sends data outside this repo.
