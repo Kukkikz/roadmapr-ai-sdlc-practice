@@ -26,7 +26,7 @@ Keep these names and update this section when they change.
 - `npm run test:pg` — same tests against real Postgres; set `TEST_DATABASE_URL` (the database is wiped)
 - `npm run test:e2e` — Playwright (starts its own dev server on port 3100)
 - `npm run db:generate` — create a migration from `src/db/schema.ts`; `npm run db:migrate` — apply migrations (Neon if `DATABASE_URL`, else local PGlite)
-- `db:seed` arrives in Phase 2.
+- `npm run db:seed` — sample Team, Boards, Ideas, votes, Comments and Tags (Neon if `DATABASE_URL`, else local PGlite); run `db:migrate` first, on an empty database only.
 
 Next.js here is a newer version than the model knows: follow [`AGENTS.md`](AGENTS.md) and read `node_modules/next/dist/docs/` before writing Next code. `cacheComponents` is on in `next.config.ts`.
 
