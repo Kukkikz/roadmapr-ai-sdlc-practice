@@ -1,0 +1,9 @@
+.next
+node_modules
+drizzle
+package-lock.json
+.data
+coverage
+playwright-report
+test-results
+.agents
