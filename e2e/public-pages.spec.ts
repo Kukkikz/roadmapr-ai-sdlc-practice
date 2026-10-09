@@ -121,8 +121,8 @@ test.describe("roadmap", () => {
 test.describe("not found", () => {
   test("a Private board looks exactly like a Board that does not exist", async ({ page }) => {
     await page.goto("/acme/beta");
-    const privateBody = await page.getByRole("main").innerText();
     await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    const privateBody = await page.getByRole("main").innerText();
 
     await page.goto("/acme/no-such-board");
     await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
