@@ -43,7 +43,7 @@ await createIdea(db, {
   actorId: "anon:e2e",
 });
 // Ideas for vote.spec.ts, one per test so tests never share a vote count.
-for (const title of ["Vote A", "Vote B", "Vote C", "Vote D", "Vote E"]) {
+for (const title of ["Vote A", "Vote B", "Vote C", "Vote D", "Vote E", "Vote F"]) {
   await createIdea(db, { boardId: sandbox.id, title, actorId: "anon:e2e" });
 }
 const shipped = await createIdea(db, {

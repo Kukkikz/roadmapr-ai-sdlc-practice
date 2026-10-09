@@ -122,7 +122,7 @@ test("shows the right vote state after going back from an Idea (client navigatio
   page,
 }) => {
   await page.goto(BOARD);
-  await page.getByRole("link", { name: "Vote A" }).click();
+  await page.getByRole("link", { name: "Vote F" }).click();
   const detail = page
     .getByRole("article")
     .filter({ has: page.getByRole("heading", { level: 1 }) })
@@ -131,11 +131,11 @@ test("shows the right vote state after going back from an Idea (client navigatio
   await expect(detail).toHaveAccessibleName("Upvote, 1 vote");
 
   await page.goBack();
-  await expect(cardVote(page, "Vote A")).toHaveAccessibleName("Upvote, 1 vote");
-  await expect(cardVote(page, "Vote A")).toHaveAttribute("aria-pressed", "true");
+  await expect(cardVote(page, "Vote F")).toHaveAccessibleName("Upvote, 1 vote");
+  await expect(cardVote(page, "Vote F")).toHaveAttribute("aria-pressed", "true");
 
-  await clickVote(page, cardVote(page, "Vote A"));
-  await expect(cardVote(page, "Vote A")).toHaveAccessibleName("Upvote, 0 votes");
+  await clickVote(page, cardVote(page, "Vote F"));
+  await expect(cardVote(page, "Vote F")).toHaveAccessibleName("Upvote, 0 votes");
 });
 
 test("counts one vote per Visitor: a second browser adds its own", async ({ page, browser }) => {
