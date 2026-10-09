@@ -24,3 +24,18 @@ export const submitIdeaSchema = z.object({
 });
 
 export type SubmitIdeaFields = "title" | "description" | "authorName";
+
+/** Limits from SPEC US-2.3. */
+export const COMMENT_LIMITS = { body: 1000, authorName: 40 } as const;
+
+export const submitCommentSchema = z.object({
+  ideaId: z.string().min(1).max(100),
+  body: z
+    .string({ error: "Enter a comment." })
+    .trim()
+    .min(1, "Enter a comment.")
+    .max(COMMENT_LIMITS.body, `Comment must be ${COMMENT_LIMITS.body} characters or fewer.`),
+  authorName: optionalText(COMMENT_LIMITS.authorName, "Display name"),
+});
+
+export type SubmitCommentFields = "body" | "authorName";

@@ -182,10 +182,10 @@ PRs, in order: (1) identity and rate limiter, (2) submit and duplicate hint, (3)
 
 ### Comments (PR 4)
 
-- [ ] Add comment on an idea as a Visitor: body required, max 1000 characters, optional display name [US-2.3]
-- [ ] Basic spam protection: rate limit, max length, honeypot field [US-2.3, G5]
-- [ ] Comments allowed on Ideas in every status [US-2.3]
-- [ ] No-comments state and the rate-limit error [US-2.3, G5]. Stitch screen `44fcdec6…`
+- [x] Add comment on an idea as a Visitor: body required, max 1000 characters, optional display name [US-2.3]
+- [x] Basic spam protection: rate limit, max length, honeypot field [US-2.3, G5]
+- [x] Comments allowed on Ideas in every status [US-2.3]
+- [x] No-comments state and the rate-limit error [US-2.3, G5]. Stitch screen `44fcdec6…`
 
 ---
 

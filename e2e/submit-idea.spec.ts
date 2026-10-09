@@ -117,6 +117,7 @@ test.describe("duplicate hint", () => {
 
 test.describe("rate limit", () => {
   test("the 6th submission shows a slow-down error and creates nothing", async ({ page }) => {
+    test.setTimeout(90_000); // six round trips in dev mode
     // Unique per run: the Sandbox board keeps earlier runs' Ideas.
     const run = Math.random().toString(36).slice(2, 8);
     for (let i = 1; i <= 5; i++) {

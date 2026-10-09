@@ -50,7 +50,7 @@ function useSimilarIdeas(boardId: string, title: string): SimilarIdea[] {
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? (
-    <p id={id} className="text-[13px] font-medium text-danger">
+    <p id={id} role="alert" className="text-[13px] font-medium text-danger">
       {message}
     </p>
   ) : null;
