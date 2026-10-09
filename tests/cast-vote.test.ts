@@ -32,6 +32,9 @@ afterAll(async () => {
   await ctx.close();
 });
 
+// ~60 sequential votes: fast on a local Postgres, slow over the internet (Neon).
+const SLOW = 120_000;
+
 const NOW = new Date("2026-03-01T12:00:00Z");
 let counter = 0;
 const visitor = (): Visitor => {
@@ -113,35 +116,47 @@ describe("castVote", () => {
     });
   });
 
-  it("refuses the 61st vote from one IP in a minute and changes nothing", async () => {
-    const idea = await newIdea();
-    const ip = "198.51.100.61";
-    for (let i = 0; i < 60; i++) {
-      const other = await newIdea();
-      expect((await castVote(ctx.db, visitor(), ip, other.id, NOW)).ok).toBe(true);
-    }
-    const refused = await castVote(ctx.db, visitor(), ip, idea.id, NOW);
-    expect(refused).toEqual({ ok: false, error: "rate_limited" });
-    expect(await countVotes(ctx.db, idea.id)).toBe(0);
-  });
+  it(
+    "refuses the 61st vote from one IP in a minute and changes nothing",
+    async () => {
+      const idea = await newIdea();
+      const ip = "198.51.100.61";
+      for (let i = 0; i < 60; i++) {
+        const other = await newIdea();
+        expect((await castVote(ctx.db, visitor(), ip, other.id, NOW)).ok).toBe(true);
+      }
+      const refused = await castVote(ctx.db, visitor(), ip, idea.id, NOW);
+      expect(refused).toEqual({ ok: false, error: "rate_limited" });
+      expect(await countVotes(ctx.db, idea.id)).toBe(0);
+    },
+    SLOW,
+  );
 
-  it("limits per IP, not per cookie: a fresh cookie does not reset the limit", async () => {
-    const ip = "198.51.100.62";
-    for (let i = 0; i < 60; i++) {
-      await castVote(ctx.db, visitor(), ip, (await newIdea()).id, NOW);
-    }
-    const result = await castVote(ctx.db, visitor(), ip, (await newIdea()).id, NOW);
-    expect(result).toEqual({ ok: false, error: "rate_limited" });
-  });
+  it(
+    "limits per IP, not per cookie: a fresh cookie does not reset the limit",
+    async () => {
+      const ip = "198.51.100.62";
+      for (let i = 0; i < 60; i++) {
+        await castVote(ctx.db, visitor(), ip, (await newIdea()).id, NOW);
+      }
+      const result = await castVote(ctx.db, visitor(), ip, (await newIdea()).id, NOW);
+      expect(result).toEqual({ ok: false, error: "rate_limited" });
+    },
+    SLOW,
+  );
 
-  it("allows votes again in the next minute", async () => {
-    const ip = "198.51.100.63";
-    for (let i = 0; i < 61; i++) {
-      await castVote(ctx.db, visitor(), ip, (await newIdea()).id, NOW);
-    }
-    const later = new Date(NOW.getTime() + 61_000);
-    expect((await castVote(ctx.db, visitor(), ip, (await newIdea()).id, later)).ok).toBe(true);
-  });
+  it(
+    "allows votes again in the next minute",
+    async () => {
+      const ip = "198.51.100.63";
+      for (let i = 0; i < 61; i++) {
+        await castVote(ctx.db, visitor(), ip, (await newIdea()).id, NOW);
+      }
+      const later = new Date(NOW.getTime() + 61_000);
+      expect((await castVote(ctx.db, visitor(), ip, (await newIdea()).id, later)).ok).toBe(true);
+    },
+    SLOW,
+  );
 });
 
 describe("votedIdeaIds", () => {

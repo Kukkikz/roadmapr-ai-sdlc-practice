@@ -66,7 +66,7 @@ Full ER diagram, constraints and indexes: [`docs/database-er-diagram.md`](docs/d
 ### Project Scaffolding
 
 - [x] Initialise Next.js + TypeScript + ESLint + Prettier (Vitest and Playwright smoke tests included)
-- [ ] Set up Drizzle with PGlite for local dev (done: PGlite migrations and tests pass, and the same tests pass on real Postgres in CI; still to verify: the Neon driver against a real Neon database, done in Phase 3 PR 1)
+- [x] Set up Drizzle with PGlite for local dev (PGlite migrations and tests pass; the same tests pass on real Postgres in CI and on Neon; the app runs on Neon's HTTP driver, smoke-tested 2026-10-10: migrate, seed, pages, submit, vote, comment, rate limiter)
 - [x] Add `.env.example` and env validation (zod)
 - [x] Set up GitHub repo, branch protection, and CI skeleton (public repo `Kukkikz/roadmapr-ai-sdlc-practice`; `main` requires a PR and the three CI checks, no force-push, linear history, applies to admins)
 
@@ -123,7 +123,7 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 - [x] Implement schema for all tables above, following `docs/database-er-diagram.md`: check constraints, composite same-board foreign keys on `idea_tags`, `ON DELETE CASCADE` down the tree (team, board, idea, tag), indexes
 - [x] Verify PGlite supports the generated `tsvector` column and GIN index before relying on them (tested in `tests/schema.test.ts` and `tests/data.test.ts`)
-- [ ] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon) (done: `drizzle/0001_*.sql` applies on PGlite; real Postgres runs in CI; still to verify: Neon, done in Phase 3 PR 1)
+- [x] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon) (`drizzle/0000_*.sql` and `0001_*.sql` apply on PGlite, on real Postgres in CI, and on Neon over the HTTP driver, 2026-10-10)
 - [x] Integration tests: cascade deletes (team, board, idea children), member soft-removal keeps attribution, link-shape and `actor_id` check constraints
 - [x] Seed script (`npm run db:seed`): 1 team, 2 boards, sample ideas, votes, comments, tags
 
@@ -161,7 +161,7 @@ PRs, in order: (1) identity and rate limiter, (2) submit and duplicate hint, (3)
 - [x] Helper to read the anonymous ID in server actions / route handlers (`src/lib/visitor.ts`); the one place that later learns about `member:` [G1] (technical)
 - [x] `getClientIp()`: the one place the client IP is read (`x-forwarded-for` aware); IPs are used for rate limiting only [G5, NF6] (technical)
 - [x] `checkRateLimit(key, limit, window)` over the `rate_limits` table, atomic in one statement (no interactive transaction, so it works over Neon's HTTP driver); limits per the table in `SPEC.md` G5 [G5] (technical)
-- [ ] Neon smoke test before this PR merges: run `npm run test:pg` and `npm run db:migrate` against a throwaway Neon branch, then tick the two Neon items in Phases 0 and 2
+- [x] Neon smoke test (run after the PR merged, 2026-10-10, on an empty Neon Postgres 17 database): `db:migrate` and `db:seed` over the HTTP driver; the app on Neon with browser checks for the Idea list, full-text search, Private-board 404, submit, duplicate hint, vote on/off, comment, the 6th-submission refusal, and 20 parallel Visitors voting (all counted); no raw IPs in `rate_limits`; `test:pg` against Neon passes (160 of 161, the one failure is the Windows CRLF design-token test). Slow rate-limit tests got a 120 s timeout because of internet latency
 - [x] Hidden-Idea write guard: `findIdeaForVisitor` returns null for a hidden Idea or a Board the Visitor cannot see, so votes and comments respond 404 for Visitors [G2, G3]; the vote and comment actions (PRs 3 and 4) must call it
 
 ### Submit Ideas (PR 2)

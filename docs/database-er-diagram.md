@@ -163,4 +163,4 @@ Vote counts and comment counts are aggregated by query (no counter columns, SPEC
 ## Open items to verify during implementation
 
 - Verified: PGlite supports the generated `tsvector` column and GIN index; Drizzle expresses the composite foreign keys, partial index and check constraints, so the migration is fully generated.
-- Still to verify: the migration against a real Neon database.
+- Verified (2026-10-10): the migrations, seed and the integration tests run against a real Neon Postgres 17 database, and the app runs on it through Neon's HTTP driver.
