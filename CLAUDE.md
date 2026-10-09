@@ -20,11 +20,11 @@ Next.js App Router + TypeScript, Drizzle (single `pg-core` schema), PGlite local
 
 Keep these names and update this section when they change.
 
-- `npm run dev` — start the app; needs `SESSION_SECRET` in `.env.local` (see `.env.example`); uses file-backed PGlite in `.data/` unless `DATABASE_URL` is set
+- `npm run dev` — start the app; needs `SESSION_SECRET` in `.env.local` (see `.env.example`); uses file-backed PGlite in `.data/pglite` (or `PGLITE_DATA_DIR`) unless `DATABASE_URL` is set
 - `npm run lint` / `npm run typecheck` / `npm run format:check` (`npm run format` fixes)
 - `npm test` — unit + integration (in-memory PGlite)
 - `npm run test:pg` — same tests against real Postgres; set `TEST_DATABASE_URL` (the database is wiped)
-- `npm run test:e2e` — Playwright (starts its own dev server on port 3100)
+- `npm run test:e2e` — Playwright (builds a fresh seeded PGlite in `.data/e2e-pglite` via `scripts/e2e-setup.mts`, then starts its own dev server on port 3100)
 - `npm run db:generate` — create a migration from `src/db/schema.ts`; `npm run db:migrate` — apply migrations (Neon if `DATABASE_URL`, else local PGlite)
 - `npm run db:seed` — sample Team, Boards, Ideas, votes, Comments and Tags (Neon if `DATABASE_URL`, else local PGlite); run `db:migrate` first, on an empty database only.
 

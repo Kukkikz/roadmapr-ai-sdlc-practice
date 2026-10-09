@@ -173,3 +173,17 @@ export function listStatusEvents(db: Db, ideaId: string) {
     .where(eq(ideaStatusEvents.ideaId, ideaId))
     .orderBy(ideaStatusEvents.createdAt);
 }
+
+export const ROADMAP_STATUSES = ["planned", "in_progress", "shipped"] as const;
+
+/** Visible Ideas for the roadmap columns, most voted first. `open` and `declined` never appear. */
+export async function listRoadmapIdeas(db: Db, boardId: string) {
+  const columns = await Promise.all(
+    ROADMAP_STATUSES.map((status) => listIdeas(db, { boardId, status, sort: "top" })),
+  );
+  return {
+    planned: columns[0],
+    in_progress: columns[1],
+    shipped: columns[2],
+  };
+}

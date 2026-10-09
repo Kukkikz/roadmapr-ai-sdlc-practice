@@ -9,7 +9,7 @@ import * as schema from "./schema";
 
 export { schema };
 
-const LOCAL_DATA_DIR = ".data/pglite";
+const DEFAULT_LOCAL_DATA_DIR = ".data/pglite";
 
 export function createNeonDb(url: string) {
   return drizzleNeon(neon(url), { schema });
@@ -28,8 +28,10 @@ let cached: AppDb | undefined;
 /** Neon when DATABASE_URL is set, otherwise file-backed PGlite. */
 export function getDb(): AppDb {
   if (!cached) {
-    const { DATABASE_URL } = getEnv();
-    cached = DATABASE_URL ? createNeonDb(DATABASE_URL) : createPgliteDb(LOCAL_DATA_DIR);
+    const { DATABASE_URL, PGLITE_DATA_DIR } = getEnv();
+    cached = DATABASE_URL
+      ? createNeonDb(DATABASE_URL)
+      : createPgliteDb(PGLITE_DATA_DIR ?? DEFAULT_LOCAL_DATA_DIR);
   }
   return cached;
 }

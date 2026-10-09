@@ -139,13 +139,13 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 Phase 2 built the queries and Phase 1 designed the screens; nothing built the pages. This phase does, so Phase 3 has somewhere to mount its forms and buttons. Public boards only: `canAccessBoard` (see Phase 3) returns true for them, and Phase 4 adds the private-board check.
 
-- [ ] Routing and the generic not-found page: `/{team-slug}/{board-slug}` resolves a Board by slugs; unknown Teams, Boards and hidden Ideas all render the same not-found page [G2, G3, US-1.2]. Stitch screen `f4548d13…`
-- [ ] Board page: Idea list with status badge, tags, vote count and comment count; sort top / newest; filter by status and tag; keyword search [US-1.1]. Stitch screen `504be753…`
-- [ ] Board states: loading, empty board and no search results [US-1.1]. Stitch screens `6e0c7d43…`, `8b938a37…`, `858d718b…`
-- [ ] Idea detail page: title, description, author name or "Anonymous", status badge, tags, votes, visible Comments oldest-first [US-1.2]. Stitch screen `7be6abe8…`; loading state `38d9e06b…`
-- [ ] Roadmap page: planned / in progress / shipped columns; `open` and `declined` do not appear; each card links to its Idea [US-1.3]. Stitch screen `15c97972…`; empty state `42ff71e0…`
-- [ ] Server-error page, with the copy reworded to a promise the app can keep ("Something went wrong. Try again.") [US-1.1]. Stitch screen `60643014…`
-- [ ] Playwright spec: browse a seeded board, filter, search, open an Idea, view the roadmap [US-1.1, US-1.2, US-1.3]
+- [x] Routing and the generic not-found page: `/{team-slug}/{board-slug}` resolves a Board by slugs; unknown Teams, Boards and hidden Ideas all render the same not-found page [G2, G3, US-1.2]. Stitch screen `f4548d13…`
+- [x] Board page: Idea list with status badge, tags, vote count and comment count; sort top / newest; filter by status and tag; keyword search [US-1.1]. Stitch screen `504be753…`
+- [x] Board states: loading, empty board and no search results [US-1.1]. Stitch screens `6e0c7d43…`, `8b938a37…`, `858d718b…`
+- [x] Idea detail page: title, description, author name or "Anonymous", status badge, tags, votes, visible Comments oldest-first [US-1.2]. Stitch screen `7be6abe8…`; loading state `38d9e06b…`
+- [x] Roadmap page: planned / in progress / shipped columns; `open` and `declined` do not appear; each card links to its Idea [US-1.3]. Stitch screen `15c97972…`; empty state `42ff71e0…`
+- [x] Server-error page, with the copy reworded to a promise the app can keep ("Something went wrong. Try again.") [US-1.1]. Stitch screen `60643014…`
+- [x] Playwright spec: browse a seeded board, filter, search, open an Idea, view the roadmap [US-1.1, US-1.2, US-1.3]
 
 ---
 
@@ -342,6 +342,7 @@ Test-first for security-sensitive logic and per-slice Playwright specs happen in
 
 - Votes are tied to a cookie; clearing cookies allows revoting. Per-IP rate limits are only a speed bump.
 - Whoever holds a link has its access until it is revoked or rotated.
+- The Board page and each roadmap column show at most the top 50 Ideas; there is no paging yet.
 
 ## Open Questions
 

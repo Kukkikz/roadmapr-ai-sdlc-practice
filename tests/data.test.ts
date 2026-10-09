@@ -175,6 +175,12 @@ describe("listIdeas", () => {
     expect(await titles({ tagId: ids.tag })).toEqual(["Newest"]);
   });
 
+  it("combines status, tag and search filters (all must match)", async () => {
+    expect(await titles({ status: "planned", tagId: ids.tag })).toEqual([]);
+    expect(await titles({ tagId: ids.tag, search: "theme" })).toEqual(["Newest"]);
+    expect(await titles({ tagId: ids.tag, search: "calendars" })).toEqual([]);
+  });
+
   it("searches title and description with stemming", async () => {
     expect(await titles({ search: "calendars" })).toEqual(["Old popular"]);
     expect(await titles({ search: "theme" })).toEqual(["Newest"]);
