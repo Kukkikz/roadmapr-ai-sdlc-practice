@@ -4,10 +4,11 @@ import { EmptyState } from "@/components/board/empty-state";
 import { FilterRail } from "@/components/board/filter-rail";
 import { IdeaCard } from "@/components/board/idea-card";
 import { SearchForm } from "@/components/board/search-form";
-import { listIdeas, listTags } from "@/data";
+import { listIdeas, listTags, votedIdeaIds } from "@/data";
 import { getDb } from "@/db";
 import { boardHref, parseBoardQuery } from "@/lib/board-query";
 import { getVisibleBoard } from "@/lib/board-view";
+import { readVisitor } from "@/lib/visitor";
 
 export default async function BoardPage({
   params,
@@ -31,6 +32,15 @@ export default async function BoardPage({
     listTags(db, board.id),
   ]);
 
+  const visitor = await readVisitor();
+  const voted = visitor
+    ? await votedIdeaIds(
+        db,
+        visitor.actorId,
+        ideas.map((idea) => idea.id),
+      )
+    : new Set<string>();
+
   const basePath = `/${team.slug}/${board.slug}`;
   const filtered = Boolean(query.status || query.tag || query.q);
 
@@ -48,7 +58,10 @@ export default async function BoardPage({
             <ul className="flex flex-col gap-4" aria-label="Ideas">
               {ideas.map((idea) => (
                 <li key={idea.id}>
-                  <IdeaCard idea={idea} href={`${basePath}/ideas/${idea.id}`} />
+                  <IdeaCard
+                    idea={{ ...idea, voted: voted.has(idea.id) }}
+                    href={`${basePath}/ideas/${idea.id}`}
+                  />
                 </li>
               ))}
             </ul>

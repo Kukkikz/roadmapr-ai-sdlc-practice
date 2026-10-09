@@ -13,7 +13,7 @@ test.describe("board page", () => {
     await expect(cards).toHaveCount(4);
     await expect(cards.first()).toContainText("Dark mode");
     await expect(cards.first()).toContainText("Planned");
-    await expect(cards.first().getByRole("img", { name: "3 votes" })).toBeVisible();
+    await expect(cards.first().getByRole("button", { name: "Upvote, 3 votes" })).toBeVisible();
     await expect(cards.first()).toContainText("2 comments");
     await expect(page.getByText("Secret hidden idea")).toHaveCount(0);
   });

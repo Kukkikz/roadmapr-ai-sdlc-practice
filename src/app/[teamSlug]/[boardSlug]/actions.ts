@@ -1,6 +1,7 @@
 "use server";
 
 import { getDb } from "@/db";
+import { castVote, type CastVoteResult } from "@/lib/cast-vote";
 import { getClientIp } from "@/lib/client-ip";
 import { submitIdea, type SubmitIdeaResult } from "@/lib/submit-idea";
 import { suggestSimilarIdeas, type SuggestResult } from "@/lib/similar-ideas";
@@ -35,4 +36,10 @@ export async function suggestSimilarIdeasAction(
     return { ok: false, error: "not_found" };
   }
   return suggestSimilarIdeas(getDb(), await getClientIp(), { boardId, title });
+}
+
+export async function toggleVoteAction(ideaId: string): Promise<CastVoteResult> {
+  if (typeof ideaId !== "string") return { ok: false, error: "not_found" };
+  const visitor = await getVisitor();
+  return castVote(getDb(), visitor, await getClientIp(), ideaId);
 }

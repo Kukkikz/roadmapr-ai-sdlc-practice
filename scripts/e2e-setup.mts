@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { eq } from "drizzle-orm";
 import { createBoard } from "../src/data/boards";
-import { createIdea } from "../src/data/ideas";
+import { createIdea, setIdeaStatus } from "../src/data/ideas";
 import * as schema from "../src/db/schema";
 import { seed } from "../src/db/seed";
 
@@ -42,5 +42,15 @@ await createIdea(db, {
   title: "Offline support",
   actorId: "anon:e2e",
 });
+// Ideas for vote.spec.ts, one per test so tests never share a vote count.
+for (const title of ["Vote A", "Vote B", "Vote C", "Vote D", "Vote E"]) {
+  await createIdea(db, { boardId: sandbox.id, title, actorId: "anon:e2e" });
+}
+const shipped = await createIdea(db, {
+  boardId: sandbox.id,
+  title: "Vote on shipped",
+  actorId: "anon:e2e",
+});
+await setIdeaStatus(db, shipped.id, "shipped", "member:e2e");
 await client.close();
 console.log(`E2E database ready at ${dir}.`);

@@ -175,10 +175,10 @@ PRs, in order: (1) identity and rate limiter, (2) submit and duplicate hint, (3)
 
 ### Upvote (PR 3)
 
-- [ ] Toggle upvote (one vote per anonymous ID per idea, enforced by DB unique constraint) [US-2.2]
-- [ ] Optimistic UI update for votes, reconciled with the server [US-2.2]
-- [ ] Rate limit voting per IP [US-2.2, G5]
-- [ ] Votes allowed on Ideas in every status [US-2.2]
+- [x] Toggle upvote (one vote per anonymous ID per idea, enforced by DB unique constraint) [US-2.2]
+- [x] Optimistic UI update for votes, reconciled with the server [US-2.2]
+- [x] Rate limit voting per IP [US-2.2, G5]
+- [x] Votes allowed on Ideas in every status [US-2.2]
 
 ### Comments (PR 4)
 
@@ -342,6 +342,7 @@ Test-first for security-sensitive logic and per-slice Playwright specs happen in
 
 - Votes are tied to a cookie; clearing cookies allows revoting. Per-IP rate limits are only a speed bump.
 - Whoever holds a link has its access until it is revoked or rotated.
+- A Visitor's very first action issues their anonymous cookie in its response. If that response is lost, the action may still be recorded under an ID the browser never received, so a first vote can be orphaned (and a retry adds another).
 - The Board page and each roadmap column show at most the top 50 Ideas; there is no paging yet.
 
 ## Open Questions
