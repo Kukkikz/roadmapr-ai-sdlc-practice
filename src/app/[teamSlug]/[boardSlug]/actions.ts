@@ -3,14 +3,11 @@
 import { getDb } from "@/db";
 import { castVote, type CastVoteResult } from "@/lib/cast-vote";
 import { getClientIp } from "@/lib/client-ip";
+import { formText, honeypotValue } from "@/lib/form-data";
 import { submitIdea, type SubmitIdeaResult } from "@/lib/submit-idea";
+import { submitComment, type SubmitCommentResult } from "@/lib/submit-comment";
 import { suggestSimilarIdeas, type SuggestResult } from "@/lib/similar-ideas";
 import { getVisitor } from "@/lib/visitor";
-
-const text = (formData: FormData, name: string) => {
-  const value = formData.get(name);
-  return typeof value === "string" ? value : undefined;
-};
 
 /** Thin wrapper: reads the request, delegates to `submitIdea`. Reachable by direct POST, so all checks live there. */
 export async function submitIdeaAction(
@@ -19,12 +16,11 @@ export async function submitIdeaAction(
 ): Promise<SubmitIdeaResult> {
   const visitor = await getVisitor();
   return submitIdea(getDb(), visitor, await getClientIp(), {
-    boardId: text(formData, "boardId"),
-    title: text(formData, "title"),
-    description: text(formData, "description"),
-    authorName: text(formData, "authorName"),
-    // A bot can send the honeypot as a file part; any non-text value counts as filled.
-    website: formData.get("website") instanceof File ? "file" : text(formData, "website"),
+    boardId: formText(formData, "boardId"),
+    title: formText(formData, "title"),
+    description: formText(formData, "description"),
+    authorName: formText(formData, "authorName"),
+    website: honeypotValue(formData),
   });
 }
 
@@ -42,4 +38,17 @@ export async function toggleVoteAction(ideaId: string): Promise<CastVoteResult> 
   if (typeof ideaId !== "string") return { ok: false, error: "not_found" };
   const visitor = await getVisitor();
   return castVote(getDb(), visitor, await getClientIp(), ideaId);
+}
+
+export async function submitCommentAction(
+  _previous: SubmitCommentResult | null,
+  formData: FormData,
+): Promise<SubmitCommentResult> {
+  const visitor = await getVisitor();
+  return submitComment(getDb(), visitor, await getClientIp(), {
+    ideaId: formText(formData, "ideaId"),
+    body: formText(formData, "body"),
+    authorName: formText(formData, "authorName"),
+    website: honeypotValue(formData),
+  });
 }

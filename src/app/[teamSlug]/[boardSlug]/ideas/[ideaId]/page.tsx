@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CommentForm } from "@/components/board/comment-form";
 import { VoteButton } from "@/components/board/vote-button";
 import { Badge } from "@/components/ui/badge";
 import { getIdea, hasVoted, listComments } from "@/data";
@@ -87,6 +88,7 @@ export default async function IdeaPage({
         ) : (
           <p className="text-body">No comments yet.</p>
         )}
+        <CommentForm ideaId={idea.id} />
       </section>
     </article>
   );

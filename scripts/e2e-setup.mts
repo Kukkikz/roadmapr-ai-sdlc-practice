@@ -46,6 +46,16 @@ await createIdea(db, {
 for (const title of ["Vote A", "Vote B", "Vote C", "Vote D", "Vote E", "Vote F"]) {
   await createIdea(db, { boardId: sandbox.id, title, actorId: "anon:e2e" });
 }
+// Ideas for comment.spec.ts, one per test.
+for (const title of ["Comment A", "Comment B", "Comment C", "Comment D", "Comment E"]) {
+  await createIdea(db, { boardId: sandbox.id, title, actorId: "anon:e2e" });
+}
+const shippedForComments = await createIdea(db, {
+  boardId: sandbox.id,
+  title: "Comment on shipped",
+  actorId: "anon:e2e",
+});
+await setIdeaStatus(db, shippedForComments.id, "shipped", "member:e2e");
 const shipped = await createIdea(db, {
   boardId: sandbox.id,
   title: "Vote on shipped",
