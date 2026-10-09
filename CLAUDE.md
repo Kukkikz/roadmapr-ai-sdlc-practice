@@ -27,6 +27,7 @@ Keep these names and update this section when they change.
 - `npm run test:e2e` — Playwright (builds a fresh seeded PGlite in `.data/e2e-pglite` via `scripts/e2e-setup.mts`, then starts its own dev server on port 3100)
 - `npm run db:generate` — create a migration from `src/db/schema.ts`; `npm run db:migrate` — apply migrations (Neon if `DATABASE_URL`, else local PGlite)
 - `npm run db:seed` — sample Team, Boards, Ideas, votes, Comments and Tags (Neon if `DATABASE_URL`, else local PGlite); run `db:migrate` first, on an empty database only.
+- `npm run db:reset` — delete the local PGlite database (`.data/pglite`, or `PGLITE_DATA_DIR`), then migrate and seed it. Local only: refuses to run when `DATABASE_URL` is set or the folder is outside `.data/`. Stop `npm run dev` first.
 
 Next.js here is a newer version than the model knows: follow [`AGENTS.md`](AGENTS.md) and read `node_modules/next/dist/docs/` before writing Next code. `cacheComponents` is on in `next.config.ts`.
 
