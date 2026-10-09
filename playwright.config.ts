@@ -10,6 +10,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // Parallel workers all hit a cold dev server, which compiles each route on first use.
+  timeout: 60_000,
   // The first request to a route compiles it in dev, which can be slow on a busy machine.
   expect: { timeout: 10_000 },
   use: { baseURL: `http://localhost:${PORT}`, trace: "on-first-retry" },
