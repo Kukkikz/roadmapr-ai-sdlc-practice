@@ -50,7 +50,7 @@ Next.js here is a newer version than the model knows: follow [`AGENTS.md`](AGENT
 1. Pick a PLAN task and the user story it implements; restate the acceptance criteria.
 2. Write tests first for security-sensitive logic (links, sessions, roles, rate limits, votes). For UI, tests may follow the code.
 3. Implement the smallest change that meets the criteria.
-4. Run lint, typecheck and tests before declaring done.
+4. Run lint, typecheck and tests before declaring done, then ask the `qa-engineer` subagent to review the diff; fix its findings and have it re-check.
 5. If behaviour changes, update `SPEC.md` first; if a term is new or changes, update `CONTEXT.md`; if styling or a component changes, update `DESIGN.md` first and re-upload it with `stitch upload design DESIGN.md` (this creates a new Stitch design system, so tell the user).
 6. Work on a branch and open a PR per task. `main` is protected: it needs a PR and the three CI checks (lint/typecheck/unit, real-Postgres integration, Playwright e2e). Do not merge, push to `main` or promote a production deployment without the user's say-so.
 
@@ -59,7 +59,7 @@ Next.js here is a newer version than the model knows: follow [`AGENTS.md`](AGENT
 - Lint, typecheck, unit and integration tests pass (and `npm run test:pg` for database changes).
 - E2E passes for changed user flows.
 - Acceptance criteria in `SPEC.md` are covered by tests.
-- The review subagent's report on the diff is addressed; blocking findings are fixed or dismissed by the user in the PR.
+- The `qa-engineer` subagent (`.claude/agents/qa-engineer.md`) has reviewed the diff and its report is addressed; blocking findings are fixed or dismissed by the user in the PR.
 - `PLAN.md`, `SPEC.md`, `CONTEXT.md` and `docs/database-er-diagram.md` still match the code.
 
 ## Ask before

@@ -221,7 +221,7 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 - [ ] Run the same integration tests against real Postgres in CI (Postgres service or Neon branch)
 - [ ] E2E (Playwright): submit idea → upvote → team owner link login → change status → visible on roadmap
 - [ ] E2E: private board access via share link; member invite link join
-- [ ] Fresh-context review subagent on every PR, checking the diff against `SPEC.md` and `CONTEXT.md`; blocking findings must be fixed or explicitly dismissed by you in the PR
+- [x] Fresh-context review subagent on every PR (`qa-engineer`, `.claude/agents/qa-engineer.md`: reviews the diff against `SPEC.md` and `CONTEXT.md`, runs the checks, reports findings back); blocking findings must be fixed or explicitly dismissed by you in the PR
 - [ ] Definition of done (write into `AGENTS.md`): green CI (lint, typecheck, unit + integration), E2E run on the PR, review subagent report addressed
 
 ---
