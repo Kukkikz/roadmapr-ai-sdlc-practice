@@ -14,5 +14,6 @@ describe("createPgliteDb", () => {
     const db = createPgliteDb(join(root, "nested", "pglite"));
     const result = await db.execute(sql`select 1 as one`);
     expect(result.rows[0]).toEqual({ one: 1 });
-  });
+    // Booting PGlite's WASM can exceed the 5 s default when other test files run in parallel.
+  }, 30_000);
 });

@@ -30,6 +30,12 @@ export async function getBoardBySlugs(db: Db, teamSlug: string, boardSlug: strin
   return row ?? null;
 }
 
+/** One Board by id, or null. */
+export async function getBoardById(db: Db, boardId: string) {
+  const [row] = await db.select().from(boards).where(eq(boards.id, boardId));
+  return row ?? null;
+}
+
 export function listBoardsForTeam(db: Db, teamId: string) {
   return db.select().from(boards).where(eq(boards.teamId, teamId)).orderBy(asc(boards.createdAt));
 }

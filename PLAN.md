@@ -157,12 +157,12 @@ PRs, in order: (1) identity and rate limiter, (2) submit and duplicate hint, (3)
 
 ### Identity and Rate Limiter (PR 1)
 
-- [ ] Issue a signed, HTTP-only anonymous ID cookie on first visit [G1] (technical)
-- [ ] Helper to read the anonymous ID in server actions / route handlers; the one place that later learns about `member:` [G1] (technical)
-- [ ] `getClientIp()`: the one place the client IP is read (`x-forwarded-for` aware); IPs are used for rate limiting only [G5, NF6] (technical)
-- [ ] `checkRateLimit(key, limit, window)` over the `rate_limits` table, atomic in one statement (no interactive transaction, so it works over Neon's HTTP driver); limits per the table in `SPEC.md` G5 [G5] (technical)
+- [x] Issue a signed, HTTP-only anonymous ID cookie [G1] (technical). Next.js only lets Server Actions and Route Handlers set cookies, so `getVisitor()` issues it on the Visitor's first action, not on first page view; `readVisitor()` is read-only for pages
+- [x] Helper to read the anonymous ID in server actions / route handlers (`src/lib/visitor.ts`); the one place that later learns about `member:` [G1] (technical)
+- [x] `getClientIp()`: the one place the client IP is read (`x-forwarded-for` aware); IPs are used for rate limiting only [G5, NF6] (technical)
+- [x] `checkRateLimit(key, limit, window)` over the `rate_limits` table, atomic in one statement (no interactive transaction, so it works over Neon's HTTP driver); limits per the table in `SPEC.md` G5 [G5] (technical)
 - [ ] Neon smoke test before this PR merges: run `npm run test:pg` and `npm run db:migrate` against a throwaway Neon branch, then tick the two Neon items in Phases 0 and 2
-- [ ] Hidden-Idea write guard: votes and comments on a hidden Idea respond 404 for Visitors [G2]
+- [x] Hidden-Idea write guard: `findIdeaForVisitor` returns null for a hidden Idea or a Board the Visitor cannot see, so votes and comments respond 404 for Visitors [G2, G3]; the vote and comment actions (PRs 3 and 4) must call it
 
 ### Submit Ideas (PR 2)
 
