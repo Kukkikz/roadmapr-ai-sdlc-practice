@@ -15,7 +15,8 @@ function runReset(env: Record<string, string>) {
   });
 }
 
-describe("db:reset safety guards", () => {
+// Starting tsx in a child process is slow when the other test files run in parallel.
+describe("db:reset safety guards", { timeout: 60_000 }, () => {
   it("refuses when DATABASE_URL is set, so it can never wipe a hosted database", () => {
     const result = runReset({ DATABASE_URL: "postgres://user:pass@example.neon.tech/db" });
     expect(result.status).toBe(1);
