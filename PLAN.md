@@ -46,6 +46,15 @@ Full ER diagram, constraints and indexes: [`docs/database-er-diagram.md`](docs/d
 
 ---
 
+## How to read this plan
+
+- A **task** is a cluster of checkboxes that ships and tests on its own, in one PR (not one PR per checkbox). Phase 3 lists its PRs in order.
+- Each checkbox is tagged with the `SPEC.md` story or rule it implements, e.g. `[US-2.1]`, `[G5]`, `[NF4]`. "(technical)" marks plumbing with no story of its own. The story index at the bottom maps stories back to phases.
+- Phases 3a, 3, 4 and 5 are vertical slices: each cluster ships its logic, its screens (Stitch ids from Phase 1) and one Playwright spec. Phase 6 only joins those specs into cross-phase journeys.
+- Dependencies run top to bottom: 3a (pages) before 3 (participation, mounted on those pages) before 4 (sessions, teams, private boards) before 5 (team features). Phase 3 is anonymous-only and reaches private boards and Members only through the `canAccessBoard` and actor-helper seams that Phase 4 fills in.
+
+---
+
 ## Phase 0: Planning & Setup
 
 ### Scope & Spec
@@ -57,7 +66,7 @@ Full ER diagram, constraints and indexes: [`docs/database-er-diagram.md`](docs/d
 ### Project Scaffolding
 
 - [x] Initialise Next.js + TypeScript + ESLint + Prettier (Vitest and Playwright smoke tests included)
-- [ ] Set up Drizzle with PGlite for local dev (done: PGlite migrations and tests pass, and the same tests pass on real Postgres in CI; still to verify: the Neon driver against a real Neon database)
+- [ ] Set up Drizzle with PGlite for local dev (done: PGlite migrations and tests pass, and the same tests pass on real Postgres in CI; still to verify: the Neon driver against a real Neon database, done in Phase 3 PR 1)
 - [x] Add `.env.example` and env validation (zod)
 - [x] Set up GitHub repo, branch protection, and CI skeleton (public repo `Kukkikz/roadmapr-ai-sdlc-practice`; `main` requires a PR and the three CI checks, no force-push, linear history, applies to admins)
 
@@ -70,7 +79,7 @@ Full ER diagram, constraints and indexes: [`docs/database-er-diagram.md`](docs/d
 - [x] Define brand tone, colours, typography in Stitch (`DESIGN.md` uploaded; Stitch project "Roadmapr" id `7208899953600583130`, the only design system is `5046df3c154341a381a0748a09305b70`; the duplicate `14df3a9e…` was deleted in the Stitch UI. Re-uploading `DESIGN.md` creates a new design system each time, and the CLI cannot delete one)
 - [x] Commit `DESIGN.md` (and `.stitch.json`) through a PR
 - [x] Stitch CLI installed and authenticated; Stitch agent skill installed in `.claude/skills/stitch` (git-ignored)
-- [ ] Stitch Loop workspace: deferred until the Next.js app has a dev server to capture (create workspace then; confirm before binding or uploading code)
+- [ ] Stitch Loop workspace: deferred until the Next.js app has pages to capture, i.e. once Phase 3a ships (create workspace then; confirm before binding or uploading code)
 - [x] Stitch access for the coding agent: via the Stitch CLI and skill (the skill says not to use the MCP server), so no MCP setup needed
 - [x] `DESIGN.md` is the source of truth for tokens; Stitch screens are reference only; change requests update `DESIGN.md` first (rule in `CLAUDE.md`; `tests/design-tokens.test.ts` fails if the CSS colours or radii drift from `DESIGN.md`)
 - [x] Use shadcn/ui configured from the `DESIGN.md` tokens (Radix base; Inter and JetBrains Mono via `next/font`; button, badge, input, textarea, card and label themed from the tokens; no dark mode)
@@ -104,7 +113,7 @@ The first versions of the submit, create-team, join, dashboard and settings scre
   - Dashboard: queue empty `3dae060ebd874154bc54130ab6e6fe08`, loading `599c73d1080943fabcb08d7b227defaf` (the first versions `97d201ff…` and `079d3119…` are superseded: they showed a "Queue hygiene" note that contradicts post-moderation)
   - Submit dialog rate-limited: `035fbcc8cc0e40769bf4cbab7a83e31f`
   - Pages: not found `f4548d133cb046fd9e076c81406e5ab6`, link not valid `1ea3493f8aac4bf59639cb09ebc1b363`, server error `606430143f464749a0e186cfa938f224`
-  - Not designed (reuse the patterns above when built): roadmap and board-settings loading, empty tag and member lists in settings, and an error state for the save-link screen. The server-error page says "Your input was not lost"; confirm the app can keep that promise or reword it.
+  - Not designed (reuse the patterns above when built): roadmap and board-settings loading, empty tag and member lists in settings, and an error state for the save-link screen. The server-error page says "Your input was not lost"; decided: reword it to "Something went wrong. Try again." (built in Phase 3a).
 
 ---
 
@@ -114,7 +123,7 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 - [x] Implement schema for all tables above, following `docs/database-er-diagram.md`: check constraints, composite same-board foreign keys on `idea_tags`, `ON DELETE CASCADE` down the tree (team, board, idea, tag), indexes
 - [x] Verify PGlite supports the generated `tsvector` column and GIN index before relying on them (tested in `tests/schema.test.ts` and `tests/data.test.ts`)
-- [ ] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon) (done: `drizzle/0001_*.sql` applies on PGlite; real Postgres runs in CI; still to verify: Neon)
+- [ ] Generate migrations; verify they apply cleanly on PGlite and on a real Postgres (Neon) (done: `drizzle/0001_*.sql` applies on PGlite; real Postgres runs in CI; still to verify: Neon, done in Phase 3 PR 1)
 - [x] Integration tests: cascade deletes (team, board, idea children), member soft-removal keeps attribution, link-shape and `actor_id` check constraints
 - [x] Seed script (`npm run db:seed`): 1 team, 2 boards, sample ideas, votes, comments, tags
 
@@ -126,82 +135,116 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 ---
 
+## Phase 3a: Public Read Pages (Visitors)
+
+Phase 2 built the queries and Phase 1 designed the screens; nothing built the pages. This phase does, so Phase 3 has somewhere to mount its forms and buttons. Public boards only: `canAccessBoard` (see Phase 3) returns true for them, and Phase 4 adds the private-board check.
+
+- [ ] Routing and the generic not-found page: `/{team-slug}/{board-slug}` resolves a Board by slugs; unknown Teams, Boards and hidden Ideas all render the same not-found page [G2, G3, US-1.2]. Stitch screen `f4548d13…`
+- [ ] Board page: Idea list with status badge, tags, vote count and comment count; sort top / newest; filter by status and tag; keyword search [US-1.1]. Stitch screen `504be753…`
+- [ ] Board states: loading, empty board and no search results [US-1.1]. Stitch screens `6e0c7d43…`, `8b938a37…`, `858d718b…`
+- [ ] Idea detail page: title, description, author name or "Anonymous", status badge, tags, votes, visible Comments oldest-first [US-1.2]. Stitch screen `7be6abe8…`; loading state `38d9e06b…`
+- [ ] Roadmap page: planned / in progress / shipped columns; `open` and `declined` do not appear; each card links to its Idea [US-1.3]. Stitch screen `15c97972…`; empty state `42ff71e0…`
+- [ ] Server-error page, with the copy reworded to a promise the app can keep ("Something went wrong. Try again.") [US-1.1]. Stitch screen `60643014…`
+- [ ] Playwright spec: browse a seeded board, filter, search, open an Idea, view the roadmap [US-1.1, US-1.2, US-1.3]
+
+---
+
 ## Phase 3: Anonymous Participation (Visitors)
 
-### Anonymous Identity
+Anonymous only. Member comments, the team label and the private-board share-link cookie arrive in Phase 4, once Member sessions exist. Every Phase 3 action calls `canAccessBoard(board, visitor)` first; for now it returns true for public boards and false for private ones, and Phase 4 implements the rest.
 
-- [ ] Issue a signed, HTTP-only anonymous ID cookie on first visit
-- [ ] Helper to read the anonymous ID in server actions / route handlers
+PRs, in order: (1) identity and rate limiter, (2) submit and duplicate hint, (3) vote, (4) comments. Each PR includes its Playwright spec.
 
-### Submit Ideas
+### Identity and Rate Limiter (PR 1)
 
-- [ ] Submit idea (title, description) with validation and length limits
-- [ ] Optional display name for anonymous authors
-- [ ] Rate limit submissions per anonymous ID and IP (counters in a Postgres `rate_limits` table via `checkRateLimit(key, limit, window)`; also used for team creation per IP)
-- [ ] Show similar existing ideas while typing the title (duplicate hint): same full-text query on the title only, top 3, debounced 300 ms, rate limited
+- [ ] Issue a signed, HTTP-only anonymous ID cookie on first visit [G1] (technical)
+- [ ] Helper to read the anonymous ID in server actions / route handlers; the one place that later learns about `member:` [G1] (technical)
+- [ ] `getClientIp()`: the one place the client IP is read (`x-forwarded-for` aware); IPs are used for rate limiting only [G5, NF6] (technical)
+- [ ] `checkRateLimit(key, limit, window)` over the `rate_limits` table, atomic in one statement (no interactive transaction, so it works over Neon's HTTP driver); limits per the table in `SPEC.md` G5 [G5] (technical)
+- [ ] Neon smoke test before this PR merges: run `npm run test:pg` and `npm run db:migrate` against a throwaway Neon branch, then tick the two Neon items in Phases 0 and 2
+- [ ] Hidden-Idea write guard: votes and comments on a hidden Idea respond 404 for Visitors [G2]
 
-### Upvote
+### Submit Ideas (PR 2)
 
-- [ ] Toggle upvote (one vote per anonymous ID per idea, enforced by DB unique constraint)
-- [ ] Optimistic UI update for votes
-- [ ] Rate limit voting per IP
+- [ ] Submit idea (title, description) with validation and length limits [US-2.1]
+- [ ] Optional display name for anonymous authors [US-2.1]
+- [ ] Honeypot field silently discards the submission [US-2.1]
+- [ ] Rate limit submissions per anonymous ID and IP [US-2.1, G5]
+- [ ] Show similar existing ideas while typing the title (duplicate hint): same full-text query on the title only, top 3, debounced 300 ms, rate limited [US-2.1]
+- [ ] Submit dialog, with its rate-limited state [US-2.1, G5]. Stitch screens `cd79c352…`, `035fbcc8…`
 
-### Comments
+### Upvote (PR 3)
 
-- [ ] Add comment on an idea (anonymous or team member)
-- [ ] Team replies are visually labelled
-- [ ] Basic spam protection (rate limit, max length, honeypot field)
+- [ ] Toggle upvote (one vote per anonymous ID per idea, enforced by DB unique constraint) [US-2.2]
+- [ ] Optimistic UI update for votes, reconciled with the server [US-2.2]
+- [ ] Rate limit voting per IP [US-2.2, G5]
+- [ ] Votes allowed on Ideas in every status [US-2.2]
+
+### Comments (PR 4)
+
+- [ ] Add comment on an idea as a Visitor: body required, max 1000 characters, optional display name [US-2.3]
+- [ ] Basic spam protection: rate limit, max length, honeypot field [US-2.3, G5]
+- [ ] Comments allowed on Ideas in every status [US-2.3]
+- [ ] No-comments state and the rate-limit error [US-2.3, G5]. Stitch screen `44fcdec6…`
 
 ---
 
 ## Phase 4: Team Authentication & Management
 
+Each cluster ships with its screens and one Playwright spec, so Phase 6 only has to join them into journeys. Reserved slugs come first, because team creation and board creation both depend on them.
+
 ### Secret-Link Auth
 
-- [ ] Store only hashed link tokens; links are never logged; send `Referrer-Policy: no-referrer` on redeem pages
-- [ ] Link opens a "Continue" page; the token is consumed on the button's POST (chat apps pre-fetch links)
-- [ ] Redeem creates a database session (30 days, non-sliding) and redirects to the dashboard
-- [ ] Logout and session expiry; removing a member ends their sessions immediately
-- [ ] Reserved slugs (`login`, `api`, `dashboard`, ...) cannot be used for teams or boards
+- [ ] Reserved slugs (`login`, `api`, `dashboard`, `join`, ...) cannot be used for teams or boards [G6]
+- [ ] Store only hashed link tokens; links are never logged; send `Referrer-Policy: no-referrer` on redeem pages [G4]
+- [ ] Link opens a "Continue" page; the token is consumed on the button's POST (chat apps pre-fetch links) [G4, US-3.2]. Screens: redeem page `c859b611…`, link not valid `1ea3493f…`
+- [ ] Redeem creates a database session (30 days, non-sliding) and redirects to the dashboard [US-3.2]
+- [ ] Logout and session expiry [US-3.5]
+- [ ] Authorisation helper: `requireRole(team, "owner" | "member")` used by all protected actions [US-3.6]
+- [ ] The Visitor actor helper learns `member:`: a signed-in Member acts as `member:<id>`, never as their anonymous cookie [G1]
 
 ### Teams & Members
 
-- [ ] Create team and first board (anyone, rate limited per IP); show the owner link once
-- [ ] Owner generates member invite links (7-day expiry, multi-use, revocable); redeeming asks for a display name
-- [ ] Owner can generate a replacement owner link while signed in; a lost owner link with no signed-in session means a lost team (documented limitation)
-- [ ] Owner removes members (soft removal: `removed_at`, sessions ended, history keeps their name); the last owner can never be removed; a member can leave the team, and the last owner leaves by deleting the team
-- [ ] Owner deletes the team: type the slug to confirm, permanent cascade, all links and sessions stop working, slug freed immediately
-- [ ] Authorisation helper: `requireRole(team, "owner" | "member")` used by all protected actions
+- [ ] Create team and first board (anyone, rate limited per IP); show the owner link once [US-3.1, G5]. Screens: create-team `98483959…`, save-link `a3f22361…`
+- [ ] Owner generates member invite links (7-day expiry, multi-use, revocable); redeeming asks for a display name [US-3.3]
+- [ ] Owner can generate a replacement owner link while signed in; a lost owner link with no signed-in session means a lost team (documented limitation) [US-3.2]
+- [ ] Owner removes members (soft removal: `removed_at`, sessions ended immediately, history keeps their name); the last owner can never be removed [US-3.4, G8]
+- [ ] A member can leave the team; the last owner leaves by deleting the team [US-3.7]. Screen: team settings `a4a2f569…`
+- [ ] Owner deletes the team: type the slug to confirm, permanent cascade, all links and sessions stop working, slug freed immediately [US-3.8, G8]. Screens: dialog `9b1e7809…`, team deleted `80356313…`
+- [ ] Members comment as the team: Comments by a signed-in Member use `member:<id>` and are labelled with the team and display name [US-5.4]
+- [ ] Team dashboard, boards part: list of Boards, "Create board" when there are none [US-4.3]. Stitch screen `69634165…`
 
 ### Boards
 
-- [ ] Create/edit boards under a team (unique slug per team), with visibility public or private
-- [ ] Private boards: owner generates and rotates a board share link; visitors without it get a 404
-- [ ] Owner deletes a board: type the board name to confirm, permanent cascade, URL returns not found; a team may have zero boards
-- [ ] Public URL structure: `/{team-slug}/{board-slug}`
+- [ ] Create/edit boards under a team (unique slug per team), with visibility public or private [US-4.1]. Screen: board settings `5575fc79…`
+- [ ] Private boards: owner generates and rotates a board share link; visitors without it get a 404 [US-4.2, G3]
+- [ ] `canAccessBoard` private-board check: a valid Member session for the Team, or a signed cookie holding `{boardId, linkId}` whose `access_links` row still exists and is not revoked, so rotating the link ends previously granted access [US-4.2, G3]
+- [ ] Visitor joins a Private board with its share link ("Continue" page, then cookie, then redirect); revoked, rotated or unknown tokens show "link not valid" [US-2.4, G4]
+- [ ] Owner deletes a board: type the board name to confirm, permanent cascade, URL returns not found; a team may have zero boards [US-4.3, G8]. Screen: dialog `9a4c24a6…`
+- [ ] Public URL structure: `/{team-slug}/{board-slug}` (built in Phase 3a; Phase 4 adds the private-board case) [US-4.1]
 
 ---
 
 ## Phase 5: Roadmap & Moderation (Team Features)
 
+Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
+
 ### Status Management
 
-- [ ] Idea statuses: `open` (default for new ideas), `planned`, `in_progress`, `shipped`, `declined` (visible on board, not on roadmap); any transition allowed
-- [ ] Owner/members can change status from idea detail and dashboard
-- [ ] Record status change history (who, when, from → to)
-- [ ] Roadmap view grouped by status
+- [ ] Idea statuses: `open` (default for new ideas), `planned`, `in_progress`, `shipped`, `declined` (visible on board, not on roadmap); any transition allowed [G7]
+- [ ] Owner/members can change status from idea detail and dashboard [US-5.1]
+- [ ] Record status change history (who, when, from → to) [US-5.1]
 
 ### Tags
 
-- [ ] Owner/members create, rename, recolour and delete tags per board
-- [ ] Assign/remove tags on ideas
-- [ ] Filter public board by tag
+- [ ] Owner/members create, rename, recolour and delete tags per board [US-5.2]
+- [ ] Assign/remove tags on ideas [US-5.2]
 
 ### Moderation
 
-- [ ] Hide/unhide an idea (hidden ideas are not visible publicly)
-- [ ] Hide/unhide a comment (uses `comments.hidden`)
-- [ ] Moderation queue on dashboard (newest unreviewed ideas)
+- [ ] Hide/unhide an idea (hidden ideas are not visible publicly) [US-5.3, G2]
+- [ ] Hide/unhide a comment (uses `comments.hidden`) [US-5.3, G2]
+- [ ] Moderation queue on dashboard (newest unreviewed ideas); opening, tagging, changing status of or hiding an Idea sets `reviewed_at` [US-5.5]. Stitch screens: dashboard `69634165…`, queue empty `3dae060e…`, loading `599c73d1…`
 
 ---
 
@@ -209,20 +252,20 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 
 ### UX
 
-- [ ] Desktop layout check (1024px and wider); mobile and tablet are out of MVP scope
-- [ ] Accessibility pass (keyboard navigation, labels, contrast)
-- [ ] SEO basics for public board pages (titles, meta, Open Graph)
+- [ ] Desktop layout check (1024px and wider); mobile and tablet are out of MVP scope [NF2]
+- [ ] Accessibility pass (keyboard navigation, labels, contrast) [NF1]
+- [ ] SEO basics for public board pages (titles, meta, Open Graph); Private boards are `noindex` [NF4]
 
 ### Testing
 
-- [ ] Test-first for security-sensitive logic (links, sessions, roles, rate limits, votes); tests after code for UI
-- [ ] Unit tests: vote uniqueness, status transitions, role checks
-- [ ] Integration tests for server actions against in-memory PGlite (the bulk of the suite)
-- [ ] Run the same integration tests against real Postgres in CI (Postgres service or Neon branch)
-- [ ] E2E (Playwright): submit idea → upvote → team owner link login → change status → visible on roadmap
-- [ ] E2E: private board access via share link; member invite link join
+Test-first for security-sensitive logic and per-slice Playwright specs happen inside Phases 3a to 5. This phase covers what spans phases.
+
+- [ ] Unit tests: vote uniqueness, status transitions, role checks (fill gaps left by the phase PRs) [US-2.2, G7, US-3.6]
+- [ ] Integration tests for server actions against in-memory PGlite (the bulk of the suite); audit for gaps against the story index below
+- [ ] Run the same integration tests against real Postgres in CI (Postgres service or Neon branch) [NF5]
+- [ ] E2E journey (Playwright), joining the per-phase specs: submit idea → upvote → team owner link login → change status → visible on roadmap
+- [ ] E2E journey: private board access via share link; member invite link join
 - [x] Fresh-context review subagent on every PR (`qa-engineer`, `.claude/agents/qa-engineer.md`: reviews the diff against `SPEC.md` and `CONTEXT.md`, runs the checks, reports findings back); blocking findings must be fixed or explicitly dismissed by you in the PR
-- [ ] Definition of done (write into `AGENTS.md`): green CI (lint, typecheck, unit + integration), E2E run on the PR, review subagent report addressed
 
 ---
 
@@ -241,7 +284,7 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 ### Production Readiness
 
 - [ ] Error monitoring and basic logging
-- [ ] Verify rate limits work behind Vercel's proxy (use the correct client IP header)
+- [ ] Verify rate limits work behind Vercel's proxy (`getClientIp()` from Phase 3 reads the correct client IP header)
 - [ ] Backup/restore approach for Neon documented (point-in-time restore steps; confirm the plan's retention window)
 - [ ] README with setup, scripts, architecture and deploy instructions
 
@@ -253,6 +296,32 @@ The first versions of the submit, create-team, join, dashboard and settings scre
 - [ ] Change request 2: add idea sorting by "trending" (recent votes)
 - [ ] Practise the full loop for each: spec update → design tweak → implement → test → deploy
 - [ ] Write a short retrospective on what the agent did well and where it needed guidance
+
+---
+
+## Story Index
+
+| Story / rule                                         | Built in                                         |
+| ---------------------------------------------------- | ------------------------------------------------ |
+| US-1.1, US-1.2, US-1.3 (browse, read, roadmap)       | Phase 3a                                         |
+| US-2.1 (submit)                                      | Phase 3 PR 2                                     |
+| US-2.2 (vote)                                        | Phase 3 PR 3                                     |
+| US-2.3 (comment as a Visitor)                        | Phase 3 PR 4                                     |
+| US-2.4 (join a Private board)                        | Phase 4, Boards                                  |
+| US-3.1 to US-3.8 (teams, links, sessions, roles)     | Phase 4                                          |
+| US-4.1 to US-4.3 (boards, share link, delete)        | Phase 4, Boards                                  |
+| US-5.1 to US-5.3, US-5.5 (status, tags, hide, queue) | Phase 5                                          |
+| US-5.4 (reply as the team)                           | Phase 4, Teams & Members                         |
+| G1 identity                                          | Phase 3 PR 1, extended in Phase 4                |
+| G2 hidden items                                      | Phase 3a (reads), Phase 3 PR 1 (writes), Phase 5 |
+| G3 private boards                                    | Phase 3a (404), Phase 4 (`canAccessBoard`)       |
+| G4 links, G6 slugs                                   | Phase 4                                          |
+| G5 rate limits                                       | Phase 3 PR 1, applied per action, Phase 4 (team) |
+| G7 statuses, G8 removal and deletion                 | Phase 5, Phase 4                                 |
+| NF1, NF2, NF4                                        | Phase 6                                          |
+| NF3 (no N+1)                                         | Phase 2                                          |
+| NF5 (parity)                                         | Phase 2, CI; Phase 3 PR 1 adds Neon              |
+| NF6 (IP only for rate limits)                        | Phase 3 PR 1                                     |
 
 ---
 
