@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { votes } from "@/db/schema";
 import type { Db } from "./types";
 
@@ -29,4 +29,22 @@ export async function hasVoted(db: Db, ideaId: string, actorId: string) {
     .from(votes)
     .where(and(eq(votes.ideaId, ideaId), eq(votes.actorId, actorId)));
   return rows.length > 0;
+}
+
+export async function countVotes(db: Db, ideaId: string) {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(votes)
+    .where(eq(votes.ideaId, ideaId));
+  return row.count;
+}
+
+/** Which of `ideaIds` this Actor has voted for, in one query (for rendering a page of Ideas). */
+export async function votedIdeaIds(db: Db, actorId: string, ideaIds: string[]) {
+  if (ideaIds.length === 0) return new Set<string>();
+  const rows = await db
+    .select({ ideaId: votes.ideaId })
+    .from(votes)
+    .where(and(eq(votes.actorId, actorId), inArray(votes.ideaId, ideaIds)));
+  return new Set(rows.map((row) => row.ideaId));
 }

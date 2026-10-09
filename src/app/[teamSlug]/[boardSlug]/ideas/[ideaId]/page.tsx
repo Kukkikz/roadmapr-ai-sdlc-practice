@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { VoteCount } from "@/components/board/vote-count";
+import { VoteButton } from "@/components/board/vote-button";
 import { Badge } from "@/components/ui/badge";
-import { getIdea, listComments } from "@/data";
+import { getIdea, hasVoted, listComments } from "@/data";
 import { getDb } from "@/db";
 import { isMemberActor } from "@/lib/actor";
 import { getVisibleBoard } from "@/lib/board-view";
 import { formatDate } from "@/lib/format";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
+import { readVisitor } from "@/lib/visitor";
 import { cn } from "@/lib/utils";
 
 export default async function IdeaPage({
@@ -23,6 +24,8 @@ export default async function IdeaPage({
   const idea = await getIdea(db, ideaId, { boardId: board.id });
   if (!idea) notFound();
   const comments = await listComments(db, idea.id);
+  const visitor = await readVisitor();
+  const voted = visitor ? await hasVoted(db, idea.id, visitor.actorId) : false;
 
   return (
     <article className="mx-auto flex max-w-[720px] flex-col gap-8">
@@ -34,7 +37,7 @@ export default async function IdeaPage({
       </Link>
 
       <header className="flex gap-4">
-        <VoteCount count={idea.voteCount} />
+        <VoteButton ideaId={idea.id} voteCount={idea.voteCount} voted={voted} />
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <h1 className="text-[32px] leading-[1.2] text-ink">{idea.title}</h1>
           <div className="flex flex-wrap items-center gap-2">

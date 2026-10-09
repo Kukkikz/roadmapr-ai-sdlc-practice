@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import type { IdeaStatus } from "@/db/schema";
 import { plural } from "@/lib/format";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
-import { VoteCount } from "./vote-count";
+import { VoteButton } from "./vote-button";
 
 export type IdeaCardData = {
   id: string;
@@ -13,6 +13,8 @@ export type IdeaCardData = {
   voteCount: number;
   commentCount: number;
   tags: { id: string; name: string }[];
+  /** Whether the current Visitor has already upvoted it. */
+  voted: boolean;
 };
 
 export function IdeaCard({
@@ -27,7 +29,7 @@ export function IdeaCard({
 }) {
   return (
     <article className="flex gap-4 rounded-md border border-border bg-card p-4">
-      <VoteCount count={idea.voteCount} />
+      <VoteButton ideaId={idea.id} voteCount={idea.voteCount} voted={idea.voted} />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <h3 className="text-lg font-medium text-ink">
           <Link

@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/board/empty-state";
 import { IdeaCard } from "@/components/board/idea-card";
-import { listRoadmapIdeas, ROADMAP_STATUSES } from "@/data";
+import { listRoadmapIdeas, ROADMAP_STATUSES, votedIdeaIds } from "@/data";
 import { getDb } from "@/db";
 import { getVisibleBoard } from "@/lib/board-view";
 import { STATUS_LABELS } from "@/lib/status";
+import { readVisitor } from "@/lib/visitor";
 
 export default async function RoadmapPage({
   params,
@@ -14,7 +15,16 @@ export default async function RoadmapPage({
   if (!found) notFound();
   const { board, team } = found;
 
-  const roadmap = await listRoadmapIdeas(getDb(), board.id);
+  const db = getDb();
+  const roadmap = await listRoadmapIdeas(db, board.id);
+  const visitor = await readVisitor();
+  const voted = visitor
+    ? await votedIdeaIds(
+        db,
+        visitor.actorId,
+        ROADMAP_STATUSES.flatMap((status) => roadmap[status].map((idea) => idea.id)),
+      )
+    : new Set<string>();
   const basePath = `/${team.slug}/${board.slug}`;
   const empty = ROADMAP_STATUSES.every((status) => roadmap[status].length === 0);
 
@@ -40,7 +50,11 @@ export default async function RoadmapPage({
                 <ul className="flex flex-col gap-4">
                   {roadmap[status].map((idea) => (
                     <li key={idea.id}>
-                      <IdeaCard idea={idea} href={`${basePath}/ideas/${idea.id}`} compact />
+                      <IdeaCard
+                        idea={{ ...idea, voted: voted.has(idea.id) }}
+                        href={`${basePath}/ideas/${idea.id}`}
+                        compact
+                      />
                     </li>
                   ))}
                 </ul>
