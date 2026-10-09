@@ -31,5 +31,16 @@ await client.query("update ideas set hidden = true, id = 'hidden-idea-e2e' where
   hidden.id,
 ]);
 await createBoard(db, { teamId: product.teamId, name: "Empty board", slug: "empty" });
+// A Board for specs that submit Ideas, so they never change what the read-only specs count.
+const sandbox = await createBoard(db, {
+  teamId: product.teamId,
+  name: "Sandbox",
+  slug: "sandbox",
+});
+await createIdea(db, {
+  boardId: sandbox.id,
+  title: "Offline support",
+  actorId: "anon:e2e",
+});
 await client.close();
 console.log(`E2E database ready at ${dir}.`);

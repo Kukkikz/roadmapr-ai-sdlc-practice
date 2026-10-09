@@ -187,3 +187,38 @@ export async function listRoadmapIdeas(db: Db, boardId: string) {
     shipped: columns[2],
   };
 }
+
+/**
+ * Up to `limit` visible Ideas on a Board whose title shares a word with `title`, best match
+ * first (the duplicate hint). Title only, English stemming, any word may match. Words are
+ * reduced to letters and digits before they reach `to_tsquery`, so input cannot break the query.
+ */
+export async function findSimilarIdeas(
+  db: Db,
+  opts: { boardId: string; title: string; limit?: number },
+) {
+  const words = [...new Set(opts.title.toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) ?? [])].slice(
+    0,
+    8,
+  );
+  if (words.length === 0) return [];
+  const query = sql`to_tsquery('english', ${words.join(" | ")})`;
+  const titleVector = sql`to_tsvector('english', ideas.title)`;
+  return db
+    .select({
+      id: ideas.id,
+      title: ideas.title,
+      status: ideas.status,
+      voteCount: voteCountSql,
+    })
+    .from(ideas)
+    .where(
+      and(
+        eq(ideas.boardId, opts.boardId),
+        eq(ideas.hidden, false),
+        sql`${titleVector} @@ ${query}`,
+      ),
+    )
+    .orderBy(sql`ts_rank(${titleVector}, ${query}) desc`, desc(voteCountSql), desc(ideas.id))
+    .limit(opts.limit ?? 3);
+}

@@ -166,12 +166,12 @@ PRs, in order: (1) identity and rate limiter, (2) submit and duplicate hint, (3)
 
 ### Submit Ideas (PR 2)
 
-- [ ] Submit idea (title, description) with validation and length limits [US-2.1]
-- [ ] Optional display name for anonymous authors [US-2.1]
-- [ ] Honeypot field silently discards the submission [US-2.1]
-- [ ] Rate limit submissions per anonymous ID and IP [US-2.1, G5]
-- [ ] Show similar existing ideas while typing the title (duplicate hint): same full-text query on the title only, top 3, debounced 300 ms, rate limited [US-2.1]
-- [ ] Submit dialog, with its rate-limited state [US-2.1, G5]. Stitch screens `cd79c352…`, `035fbcc8…`
+- [x] Submit idea (title, description) with validation and length limits [US-2.1]
+- [x] Optional display name for anonymous authors [US-2.1]
+- [x] Honeypot field silently discards the submission [US-2.1]
+- [x] Rate limit submissions per anonymous ID and IP [US-2.1, G5]
+- [x] Show similar existing ideas while typing the title (duplicate hint): full-text query on the title only (matches any shared word, unlike board search which needs all), top 3, debounced 300 ms, rate limited [US-2.1]
+- [x] Submit dialog, with its rate-limited state [US-2.1, G5]. Stitch screens `cd79c352…`, `035fbcc8…`
 
 ### Upvote (PR 3)
 

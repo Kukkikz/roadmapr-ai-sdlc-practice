@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/board/skeleton";
+import { SubmitIdeaDialog } from "@/components/board/submit-idea-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { getVisibleBoard } from "@/lib/board-view";
 
@@ -19,12 +20,14 @@ async function BoardNav({ params }: { params: LayoutProps<"/[teamSlug]/[boardSlu
         {found.team.name} · {found.board.name}
       </Link>
       <nav aria-label="Board" className="ml-auto flex items-center gap-2">
-        <Link href={basePath} className={buttonVariants({ variant: "ghost", size: "sm" })}>
-          Ideas
-        </Link>
         <Link href={`${basePath}/roadmap`} className={buttonVariants({ variant: "secondary" })}>
           Roadmap
         </Link>
+        <SubmitIdeaDialog
+          boardId={found.board.id}
+          teamSlug={found.team.slug}
+          boardSlug={found.board.slug}
+        />
       </nav>
     </>
   );
