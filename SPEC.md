@@ -5,13 +5,23 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 ## Global rules
 
 - **G1 Identity.** Visitors are identified by a signed, HTTP-only cookie (`anon:<id>`). Members by a database session (`member:<id>`). A signed-in Member always acts as `member:`, never as their anonymous cookie.
-- **G2 Visibility.** A hidden Idea or Comment is never returned to Visitors. Members see hidden items marked as hidden.
+- **G2 Visibility.** A hidden Idea or Comment is never returned to Visitors. Members see hidden items marked as hidden. Writes to a hidden Idea (vote, comment) respond 404 for Visitors, same as reads.
 - **G3 Private boards.** For anyone without a valid Board share link or Member session for that Team, a Private board responds exactly like a board that does not exist (404).
 - **G4 Links.** Link tokens are stored hashed only, never logged. Opening a link shows a "Continue" page; the token is consumed by the POST. Redeem pages send `Referrer-Policy: no-referrer`.
-- **G5 Rate limits.** Limited actions return a clear "slow down" error, never a crash. Counters live in the `rate_limits` table.
+- **G5 Rate limits.** Limited actions return a clear "slow down" error, never a crash. Counters live in the `rate_limits` table. Limits are in the table below; every key listed for an action must pass. The client IP is read in one place (`getClientIp()`) and is used for rate limiting only.
 - **G6 Slugs.** Team and board slugs are lowercase, URL-safe, unique (team slug globally, board slug per team), and cannot be a reserved word (`login`, `api`, `dashboard`, `join`, ...).
 - **G7 Statuses.** `open` (default), `planned`, `in_progress`, `shipped`, `declined`. Any transition is allowed; every change is recorded.
 - **G8 Removal and deletion.** Members are _removed_ softly (row kept, `removed_at` set, history stays attributed). Teams and Boards are _deleted_ for good, cascading to everything beneath them, after the Owner types a confirmation. Ideas and Comments are never deleted, only hidden (a Tag's deletion removes it from Ideas).
+
+### Rate limits (G5)
+
+| Action        | Key           | Limit             |
+| ------------- | ------------- | ----------------- |
+| Submit Idea   | cookie and IP | 5 per 10 minutes  |
+| Comment       | cookie and IP | 10 per 10 minutes |
+| Vote          | IP            | 60 per minute     |
+| Similar Ideas | IP            | 30 per minute     |
+| Create Team   | IP            | 3 per hour        |
 
 ## Epic 1 — Visitors browse boards
 
@@ -121,6 +131,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 **US-4.2** As an Owner, I can manage a Private board's share link.
 
 - AC: Generate and rotate the Board share link; rotating invalidates the old one and access previously granted by it.
+- AC: A Visitor's access is stored in their signed cookie as the Board and the share link it came from. It holds only while that link exists and is not revoked, so rotating the link ends previously granted access. Ideas, Votes and Comments the Visitor wrote earlier stay.
 - AC: Switching visibility changes who can see content; nothing is deleted.
 
 **US-4.3** As an Owner, I can delete a Board.
