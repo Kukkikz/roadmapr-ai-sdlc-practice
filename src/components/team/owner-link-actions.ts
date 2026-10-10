@@ -23,8 +23,10 @@ export async function replaceOwnerLinkAction(): Promise<ReplaceOwnerLinkState> {
     const { team, member } = await requireSessionRole("owner");
     const link = await replaceOwnerLink(getDb(), team.id, member.id);
     if (!link) return { ok: false, error: "forbidden" };
-    // There is no list to refresh, but without this Next.js re-rendered the dashboard after the
-    // action in a way that failed with an InvariantError about the cookies object (seen in dev).
+    // There is no list to refresh. Without this call, dev raised an InvariantError ("underlying
+    // cookies object does not match either `cookies` or `mutableCookies`") while the dashboard
+    // re-rendered after the action. Cause not fully understood; the fix was found by trying it.
+    // Only e2e/owner-link.spec.ts would catch a regression (unit tests cannot see Next's render).
     revalidatePath("/dashboard");
     return { ok: true, ownerLinkPath: `/login/${link.token}` };
   } catch (error) {
