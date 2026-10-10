@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { signOutAction } from "@/components/auth/sign-out-action";
 import { InviteLinksPanel } from "@/components/team/invite-links-panel";
+import { MembersPanel } from "@/components/team/members-panel";
 import { Button } from "@/components/ui/button";
+import { listActiveMembers } from "@/data";
 import { getDb } from "@/db";
 import { listInviteLinks } from "@/lib/invite-links";
 import { getSession } from "@/lib/session";
@@ -21,14 +23,26 @@ async function DashboardContent() {
   // Signed-out visitors get the same page as any unknown URL (G3).
   if (!session) notFound();
   // Only Owners manage links (US-3.6); the action refuses anyone else as well.
-  const invites =
-    session.member.role === "owner" ? await listInviteLinks(getDb(), session.team.id) : null;
+  const db = getDb();
+  const [invites, members] = await Promise.all([
+    session.member.role === "owner" ? listInviteLinks(db, session.team.id) : null,
+    listActiveMembers(db, session.team.id),
+  ]);
   return (
     <>
       <h1 className="text-[40px] leading-[1.2] text-ink">{session.team.name}</h1>
       <p className="text-base text-body">
         Signed in as {session.member.displayName} ({session.member.role}).
       </p>
+      <MembersPanel
+        members={members.map((member) => ({
+          id: member.id,
+          displayName: member.displayName,
+          role: member.role,
+        }))}
+        currentMemberId={session.member.id}
+        currentRole={session.member.role}
+      />
       {invites ? (
         <InviteLinksPanel
           links={invites.map((link) => ({

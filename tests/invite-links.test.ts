@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { createAccessLink, createMember, removeMember } from "@/data";
+import { createAccessLink, createMember } from "@/data";
 import { accessLinks, members, teams } from "@/db/schema";
 import {
   createInviteLink,
@@ -11,6 +11,7 @@ import {
 import { generateToken, hashToken } from "@/lib/link-token";
 import { previewLink, redeemLink } from "@/lib/redeem";
 import { createTestDb } from "./helpers/db";
+import { removeMemberUnguarded } from "./helpers/members";
 
 let ctx: Awaited<ReturnType<typeof createTestDb>>;
 let counter = 0;
@@ -183,7 +184,7 @@ describe("revokeInviteLink (US-3.3)", () => {
     });
     expect(await revokeInviteLink(ctx.db, team, ownerLink.id, NOW)).toBe(false);
     expect(await previewLink(ctx.db, "owner", token, NOW)).toMatchObject({ ok: true });
-    await removeMember(ctx.db, owner.id, NOW);
+    await removeMemberUnguarded(ctx.db, owner.id, NOW);
   });
 
   it("refuses a made-up id", async () => {
