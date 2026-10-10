@@ -4,7 +4,6 @@ import {
   createMember,
   findSessionByHash,
   purgeExpiredSessions,
-  removeMember,
   revokeAccessLink,
 } from "@/data";
 import { accessLinks, members, sessions, teams } from "@/db/schema";
@@ -12,6 +11,7 @@ import { eq } from "drizzle-orm";
 import { generateToken, hashToken } from "@/lib/link-token";
 import { previewLink, redeemLink, SESSION_LIFETIME_MS } from "@/lib/redeem";
 import { createTestDb } from "./helpers/db";
+import { removeMemberUnguarded } from "./helpers/members";
 
 let ctx: Awaited<ReturnType<typeof createTestDb>>;
 let counter = 0;
@@ -121,7 +121,7 @@ describe("Owner link (US-3.2)", () => {
 
   it("is not valid once its Owner was removed (G8)", async () => {
     const { token, owner } = await ownerLink();
-    await removeMember(ctx.db, owner.id, NOW);
+    await removeMemberUnguarded(ctx.db, owner.id, NOW);
     expect(await previewLink(ctx.db, "owner", token, NOW)).toEqual({ ok: false });
   });
 
@@ -345,7 +345,7 @@ describe("Sessions end with the Member and the Team (US-3.4, US-3.8)", () => {
     if (!result.ok) throw new Error("expected success");
     const hash = hashToken(result.sessionToken);
     expect(await findSessionByHash(ctx.db, hash, NOW)).not.toBeNull();
-    await removeMember(ctx.db, owner.id, NOW);
+    await removeMemberUnguarded(ctx.db, owner.id, NOW);
     expect(await findSessionByHash(ctx.db, hash, NOW)).toBeNull();
   });
 

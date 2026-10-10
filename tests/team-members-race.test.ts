@@ -23,6 +23,14 @@ afterAll(async () => {
   await ctx.close();
 });
 
+describe("removing a plain Member", () => {
+  it("does not restore them when the Owner count looks like zero", async () => {
+    const bo = await createMember(ctx.db, { teamId: "t1", displayName: "Bo", role: "member" });
+    expect(await removeTeamMember(ctx.db, "t1", bo.id)).toBe("removed");
+    expect(await findActiveMember(ctx.db, "t1", bo.id)).toBeNull();
+  });
+});
+
 describe("removing an Owner that left no Owner behind", () => {
   it("puts them back and keeps their Sessions", async () => {
     const ada = await createMember(ctx.db, { teamId: "t1", displayName: "Ada", role: "owner" });

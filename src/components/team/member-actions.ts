@@ -16,9 +16,10 @@ import { removeTeamMember } from "@/lib/team-members";
  */
 export async function removeMemberAction(formData: FormData): Promise<void> {
   try {
-    const { team } = await requireSessionRole("owner");
+    const { team, member } = await requireSessionRole("owner");
     const memberId = formText(formData, "memberId");
-    if (memberId) await removeTeamMember(getDb(), team.id, memberId);
+    // Removing yourself is leaving, which also clears the cookie and goes home: use Leave Team.
+    if (memberId && memberId !== member.id) await removeTeamMember(getDb(), team.id, memberId);
     revalidatePath("/dashboard");
   } catch (error) {
     if (error instanceof AuthorizationError) return;

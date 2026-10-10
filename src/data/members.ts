@@ -14,11 +14,6 @@ export async function createMember(
   return row;
 }
 
-/** Soft removal (G8): the row stays so history keeps the name. */
-export async function removeMember(db: Db, memberId: string, now: Date = new Date()) {
-  await db.update(members).set({ removedAt: now }).where(eq(members.id, memberId));
-}
-
 /** A Team's current (not removed) Members, Owners first, then in the order they joined. */
 export function listActiveMembers(db: Db, teamId: string) {
   return db

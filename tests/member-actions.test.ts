@@ -97,6 +97,15 @@ describe("removeMemberAction (US-3.4, US-3.6)", () => {
     expect(await isActive(victim)).toBe(true);
   });
 
+  it("ignores an Owner's own id: leaving is Leave Team, not Remove", async () => {
+    const team = await newTeam();
+    const ada = await join(team, "owner");
+    await join(team, "owner");
+    sessionRef.current = sessionOf(ada);
+    await removeMemberAction(form({ memberId: ada.id }));
+    expect(await isActive(ada)).toBe(true);
+  });
+
   it("never removes the last Owner, even when the last Owner asks", async () => {
     const team = await newTeam();
     const owner = await join(team, "owner");

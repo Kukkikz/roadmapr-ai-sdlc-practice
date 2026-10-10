@@ -18,7 +18,9 @@ export type RemoveMemberResult = "removed" | "not_found" | "last_owner";
  * Member's Sessions end at once (they are also refused on lookup), and an Owner link of a removed
  * Owner stops working. The last Owner can never be removed. The guard is one statement, but
  * Neon's HTTP driver has no transaction, so two Owners removing each other at the same instant
- * could both pass it; the check afterwards puts the Member back if that left no Owner.
+ * could both pass it; the check afterwards puts the Member back if that left no Owner. That
+ * compensation is not atomic either: a process crash between the two steps would leave a Team
+ * with no Owner, which only a database fix can undo. That risk is accepted.
  */
 export async function removeTeamMember(
   db: Db,
