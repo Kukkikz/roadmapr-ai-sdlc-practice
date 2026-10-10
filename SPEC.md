@@ -92,6 +92,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - AC: Owner links open at `/login/<token>` and Member invite links at `/join/<token>`. A link opened at the other path, an unknown, expired or revoked link, and a link whose Member was removed all show "link not valid". Only the POST consumes a link; opening it never does.
 - AC: The session cookie is HTTP-only and holds a random token; only its hash is stored. Every redeem issues a new session token. Redeeming is rate limited per IP (G5).
 - AC: While signed in, I can generate a replacement Owner link, which invalidates the old one.
+- AC: The dashboard has an "Owner link" section for Owners only. "Replace Owner link" makes a new link for me, shows it once with a copy button (only its hash is stored), and revokes every earlier Owner link of mine at once. Other Owners' links are untouched, and my own sessions stay signed in.
+- AC: A lost Owner link with no signed-in session cannot be recovered (a documented limitation). Replacing never leaves me without a working link: the new one exists before the old ones are revoked.
 
 **US-3.3** As an Owner, I can invite Members with a Member invite link.
 
