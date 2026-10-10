@@ -20,6 +20,8 @@ async function findUsableLink(db: Db, kind: RedeemKind, token: unknown, now: Dat
   if (kind === "owner") {
     // An Owner link signs in its Member; a removed Member's link is dead (G8).
     if (!found.member || found.member.removedAt || found.member.role !== "owner") return null;
+    // The schema has no composite key tying a link's Team to its Member's Team, so check it.
+    if (found.member.teamId !== found.link.teamId) return null;
   }
   return found;
 }

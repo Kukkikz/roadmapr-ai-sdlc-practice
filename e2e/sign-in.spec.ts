@@ -65,12 +65,16 @@ test("revoked, expired, unknown and wrong-path links all say the link is not val
   }
 });
 
-test("secret-link pages are never referred, cached, framed or indexed", async ({ page }) => {
-  const response = await page.goto(`/login/${E2E_TOKENS.owner}`);
-  const headers = response!.headers();
-  expect(headers["referrer-policy"]).toBe("no-referrer");
-  expect(headers["cache-control"]).toContain("no-store");
-  expect(headers["x-frame-options"]).toBe("DENY");
-  expect(headers["x-content-type-options"]).toBe("nosniff");
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-});
+for (const path of [`/login/${E2E_TOKENS.owner}`, `/join/${E2E_TOKENS.invite}`]) {
+  test(`${path.split("/")[1]} pages are never referred, cached, framed or indexed`, async ({
+    page,
+  }) => {
+    const response = await page.goto(path);
+    const headers = response!.headers();
+    expect(headers["referrer-policy"]).toBe("no-referrer");
+    expect(headers["cache-control"]).toContain("no-store");
+    expect(headers["x-frame-options"]).toBe("DENY");
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  });
+}

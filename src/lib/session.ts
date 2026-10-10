@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { findSessionByHash } from "@/data";
 import { getDb } from "@/db";
 import { hashToken, isTokenShape } from "./link-token";
@@ -22,6 +23,8 @@ export async function setSessionCookie(token: string, expiresAt: Date): Promise<
  * Components. A removed Member, an expired Session and a forged cookie all give null (G8).
  */
 export async function getSession() {
+  // Whether a Session has expired depends on the clock, so render per request, never at build.
+  await connection();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!isTokenShape(token)) return null;
   const found = await findSessionByHash(getDb(), hashToken(token));

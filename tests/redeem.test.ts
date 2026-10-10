@@ -124,6 +124,23 @@ describe("Owner link (US-3.2)", () => {
     expect(await previewLink(ctx.db, "owner", token, NOW)).toEqual({ ok: false });
   });
 
+  it("is not valid if the link and its Member belong to different Teams", async () => {
+    const other = await ownerLink();
+    const team = await newTeam();
+    const token = generateToken();
+    await createAccessLink(ctx.db, {
+      teamId: team,
+      kind: "owner",
+      tokenHash: hashToken(token),
+      memberId: other.owner.id,
+    });
+    expect(await previewLink(ctx.db, "owner", token, NOW)).toEqual({ ok: false });
+    expect(await redeemLink(ctx.db, ip(), "owner", token, {}, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+  });
+
   it("is not valid if the linked Member is not an Owner", async () => {
     const team = await newTeam();
     const plain = await createMember(ctx.db, { teamId: team, displayName: "Bo", role: "member" });

@@ -16,6 +16,8 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+vi.mock("next/server", () => ({ connection: async () => {} }));
+
 let ctx: Awaited<ReturnType<typeof createTestDb>>;
 vi.mock("@/db", () => ({ getDb: () => ctx.db }));
 

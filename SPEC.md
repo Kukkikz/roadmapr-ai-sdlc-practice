@@ -24,7 +24,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 | Create Team   | IP            | 3 per hour        |
 | Redeem link   | IP            | 10 per 10 minutes |
 
-Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so guessing tokens is throttled.
+Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so guessing tokens is throttled. Opening a link (the read-only "Continue" page) is deliberately not limited: tokens are 256 random bits, so guessing them is infeasible.
 
 ## Epic 1 — Visitors browse boards
 
