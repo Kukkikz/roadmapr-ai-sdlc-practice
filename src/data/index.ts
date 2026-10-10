@@ -6,5 +6,6 @@ export * from "./members";
 export * from "./rate-limits";
 export * from "./sessions";
 export * from "./tags";
+export * from "./teams";
 export * from "./types";
 export * from "./votes";

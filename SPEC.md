@@ -82,8 +82,9 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-3.1** As anyone, I can create a Team.
 
 - AC: Form takes team name, team slug and first board name; creates the Team, the Owner Member (display name asked) and the first Board.
-- AC: The Owner link is shown once with a "save this link" warning and a copy button; only its hash is stored.
-- AC: Team creation is rate limited per IP.
+- AC: The Owner link is shown once with a "save this link" warning and a copy button; only its hash is stored. Leaving or reloading the page loses it for good.
+- AC: Creating the Team also signs the creator in as the Owner, so the dashboard is one click away; the first Board is public, and its slug comes from its name.
+- AC: The form lives at `/new`. The Team slug follows G6 and a taken slug is a field error. Team creation is rate limited per IP; invalid forms do not count against the limit.
 
 **US-3.2** As an Owner, I can sign in on any device with my Owner link.
 
