@@ -11,7 +11,6 @@ export type GenerateInviteState =
       ok: true;
       /** `/join/<token>`. Returned once, in this response only; the server keeps just its hash. */
       invitePath: string;
-      expiresAt: string;
     }
   | { ok: false; error: "forbidden" };
 
@@ -24,7 +23,7 @@ export async function generateInviteAction(): Promise<GenerateInviteState> {
     const { team } = await requireSessionRole("owner");
     const link = await createInviteLink(getDb(), team.id);
     revalidatePath("/dashboard");
-    return { ok: true, invitePath: `/join/${link.token}`, expiresAt: link.expiresAt.toISOString() };
+    return { ok: true, invitePath: `/join/${link.token}` };
   } catch (error) {
     if (error instanceof AuthorizationError) return { ok: false, error: "forbidden" };
     throw error;
