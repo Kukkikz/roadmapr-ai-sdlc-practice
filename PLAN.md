@@ -195,10 +195,10 @@ Each cluster ships with its screens and one Playwright spec, so Phase 6 only has
 
 ### Secret-Link Auth
 
-- [ ] Reserved slugs (`login`, `api`, `dashboard`, `join`, ...) cannot be used for teams or boards [G6]
-- [ ] Store only hashed link tokens; links are never logged; send `Referrer-Policy: no-referrer` on redeem pages [G4]
-- [ ] Link opens a "Continue" page; the token is consumed on the button's POST (chat apps pre-fetch links) [G4, US-3.2]. Screens: redeem page `c859b611…`, link not valid `1ea3493f…`
-- [ ] Redeem creates a database session (30 days, non-sliding) and redirects to the dashboard [US-3.2]
+- [x] Reserved slugs (`login`, `api`, `dashboard`, `join`, ...) cannot be used for teams or boards [G6] (`slugSchema` in `src/lib/slugs.ts`; Team and Board creation must use it)
+- [x] Store only hashed link tokens; links are never logged; send `Referrer-Policy: no-referrer` on redeem pages [G4] (SHA-256 of 256-bit tokens; the redeem pages also send `Cache-Control: no-store` and `noindex`; baseline `X-Frame-Options`, `nosniff` and HSTS on every route, CSP deferred)
+- [x] Link opens a "Continue" page; the token is consumed on the button's POST (chat apps pre-fetch links) [G4, US-3.2]. Screens: redeem page `c859b611…`, link not valid `1ea3493f…`
+- [x] Redeem creates a database session (30 days, non-sliding) and redirects to the dashboard [US-3.2] (`/login/<token>` and `/join/<token>`; redeem is rate limited per IP, 10 per 10 minutes; `/dashboard` is a placeholder until US-4.3)
 - [ ] Logout and session expiry [US-3.5]
 - [ ] Authorisation helper: `requireRole(team, "owner" | "member")` used by all protected actions [US-3.6]
 - [ ] The Visitor actor helper learns `member:`: a signed-in Member acts as `member:<id>`, never as their anonymous cookie [G1]

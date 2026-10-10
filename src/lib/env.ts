@@ -6,7 +6,8 @@ const envSchema = z.object({
   DATABASE_URL: z.url().optional(),
   // Where local PGlite keeps its files when DATABASE_URL is unset. Defaults to .data/pglite.
   PGLITE_DATA_DIR: z.string().min(1).optional(),
-  // Signs the anonymous-ID cookie and hashes link tokens.
+  // Signs the anonymous-ID cookie and keys the rate-limit hashes. Link and Session tokens are
+  // plain SHA-256 hashed (see link-token.ts), so rotating this does not sign Members out.
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
 });
 

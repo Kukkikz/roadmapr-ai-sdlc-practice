@@ -12,6 +12,7 @@ export const RATE_LIMITS = {
   vote: { limit: 60, windowSeconds: 60, scopes: ["ip"] },
   similar: { limit: 30, windowSeconds: 60, scopes: ["ip"] },
   createTeam: { limit: 3, windowSeconds: 3600, scopes: ["ip"] },
+  redeem: { limit: 10, windowSeconds: 600, scopes: ["ip"] },
 } as const satisfies Record<
   string,
   { limit: number; windowSeconds: number; scopes: readonly RateLimitScope[] }

@@ -22,6 +22,9 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 | Vote          | IP            | 60 per minute     |
 | Similar Ideas | IP            | 30 per minute     |
 | Create Team   | IP            | 3 per hour        |
+| Redeem link   | IP            | 10 per 10 minutes |
+
+Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so guessing tokens is throttled. Opening a link (the read-only "Continue" page) is deliberately not limited: tokens are 256 random bits, so guessing them is infeasible.
 
 ## Epic 1 — Visitors browse boards
 
@@ -85,6 +88,8 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 **US-3.2** As an Owner, I can sign in on any device with my Owner link.
 
 - AC: Opening the link shows "Continue"; continuing creates a session (30 days, non-sliding) and redirects to the dashboard. The link stays valid until replaced.
+- AC: Owner links open at `/login/<token>` and Member invite links at `/join/<token>`. A link opened at the other path, an unknown, expired or revoked link, and a link whose Member was removed all show "link not valid". Only the POST consumes a link; opening it never does.
+- AC: The session cookie is HTTP-only and holds a random token; only its hash is stored. Every redeem issues a new session token. Redeeming is rate limited per IP (G5).
 - AC: While signed in, I can generate a replacement Owner link, which invalidates the old one.
 
 **US-3.3** As an Owner, I can invite Members with a Member invite link.

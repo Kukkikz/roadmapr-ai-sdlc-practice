@@ -61,3 +61,11 @@ _Avoid_: Invitation (implies an email)
 
 **Board share link**:
 A secret, rotatable link that grants a Visitor access to one Private board.
+
+**Redeem**:
+To open an access link and press "Continue", which uses the link to sign in (Owner link), join the Team (Member invite link) or gain access (Board share link). Opening the link alone never redeems it.
+_Avoid_: Accept, claim, activate
+
+**Session**:
+A signed-in Member's 30-day login on one device, ended by sign-out, removal from the Team or expiry. Not the same as a Visitor's anonymous cookie.
+_Avoid_: Account, token (the token is the secret that proves a Session)
