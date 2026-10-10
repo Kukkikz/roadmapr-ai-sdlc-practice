@@ -54,15 +54,16 @@ function Field({
 /** The one-time "save your Owner link" state (US-3.1). Leaving or reloading the page loses the link. */
 function SaveOwnerLink({ teamName, path }: { teamName: string; path: string }) {
   const origin = useSyncExternalStore(noop, originOnClient, originOnServer);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const url = `${origin}${path}`;
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setCopied("copied");
     } catch {
-      setCopied(false);
+      // No clipboard access (for example on a non-secure origin): the link is still selectable.
+      setCopied("failed");
     }
   }
 
@@ -86,15 +87,18 @@ function SaveOwnerLink({ teamName, path }: { teamName: string; path: string }) {
       </code>
       <div className="flex gap-2">
         <Button type="button" variant="secondary" onClick={copy}>
-          {copied ? "Copied" : "Copy link"}
+          {copied === "copied" ? "Copied" : "Copy link"}
         </Button>
         <Link href="/dashboard" className={buttonVariants({ variant: "secondary" })}>
           Go to dashboard
         </Link>
       </div>
       <p className="sr-only" aria-live="polite">
-        {copied ? "Link copied to the clipboard." : ""}
+        {copied === "copied" ? "Link copied to the clipboard." : ""}
       </p>
+      {copied === "failed" ? (
+        <p className="text-sm">Could not copy. Select the link above and copy it yourself.</p>
+      ) : null}
     </section>
   );
 }

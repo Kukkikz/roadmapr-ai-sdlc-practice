@@ -65,6 +65,29 @@ test("creates a Team, shows the Owner link once, and signs the creator in", asyn
   await other.close();
 });
 
+test("the Copy button puts the shown Owner link on the clipboard", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await fillForm(page, `e2e-${unique()}`);
+  await page.getByRole("button", { name: "Create Team" }).click();
+  const link = (await page.getByTestId("owner-link").textContent()) ?? "";
+  await page.getByRole("button", { name: "Copy link" }).click();
+  await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
+});
+
+test("says so when the link cannot be copied", async ({ page }) => {
+  await fillForm(page, `e2e-${unique()}`);
+  await page.getByRole("button", { name: "Create Team" }).click();
+  await expect(page.getByTestId("owner-link")).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: () => Promise.reject(new Error("denied")) },
+    });
+  });
+  await page.getByRole("button", { name: "Copy link" }).click();
+  await expect(page.getByText("Could not copy. Select the link above")).toBeVisible();
+});
+
 test("shows field errors for a reserved or taken slug and creates nothing", async ({ page }) => {
   await fillForm(page, "login");
   await page.getByRole("button", { name: "Create Team" }).click();

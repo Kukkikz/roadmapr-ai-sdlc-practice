@@ -91,7 +91,10 @@ export async function createTeamWithOwner(
     }
     return { ok: true, teamName: team.name, ownerToken, sessionToken, expiresAt };
   } catch (error) {
-    await deleteTeam(db, team.id).catch(() => {});
+    // Never swallow this silently: an unreachable Team keeps its slug until someone removes it.
+    await deleteTeam(db, team.id).catch(() => {
+      console.error(`createTeamWithOwner: could not remove half-made Team ${team.id}`);
+    });
     throw error;
   }
 }

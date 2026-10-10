@@ -193,12 +193,12 @@ describe("rate limit (G5)", () => {
 });
 
 describe("no half-made Team", () => {
-  it("deletes the Team again if a later step fails", async () => {
+  /** Runs a creation in which inserting into `failingTable` throws, and returns what is left. */
+  async function failAt(failingTable: unknown) {
     const input = form();
-    // Make the Owner link insert fail, after the Team, Owner and Board already exist.
     const original = ctx.db.insert.bind(ctx.db);
     const spy = vi.spyOn(ctx.db, "insert").mockImplementation(((table: unknown) => {
-      if (table === accessLinks) throw new Error("boom");
+      if (table === failingTable) throw new Error("boom");
       return original(table as never);
     }) as never);
     try {
@@ -206,7 +206,65 @@ describe("no half-made Team", () => {
     } finally {
       spy.mockRestore();
     }
-    expect(await getTeamBySlug(ctx.db, input.teamSlug)).toBeNull();
+    return input;
+  }
+
+  const leftovers = async (slug: string) => {
+    const team = await getTeamBySlug(ctx.db, slug);
+    if (!team) return { team: null, members: 0, boards: 0, links: 0 };
+    return {
+      team,
+      members: (await ctx.db.select().from(members).where(eq(members.teamId, team.id))).length,
+      boards: (await ctx.db.select().from(boards).where(eq(boards.teamId, team.id))).length,
+      links: (await ctx.db.select().from(accessLinks).where(eq(accessLinks.teamId, team.id)))
+        .length,
+    };
+  };
+
+  it("deletes the Team, its Owner and its Board if the Owner link cannot be made", async () => {
+    const input = await failAt(accessLinks);
+    expect(await leftovers(input.teamSlug)).toEqual({
+      team: null,
+      members: 0,
+      boards: 0,
+      links: 0,
+    });
+  });
+
+  it("does the same if the Session cannot be made, and frees the slug for a retry", async () => {
+    const input = await failAt(sessions);
+    expect(await leftovers(input.teamSlug)).toEqual({
+      team: null,
+      members: 0,
+      boards: 0,
+      links: 0,
+    });
+    const retry = await createTeamWithOwner(ctx.db, ip(), input, { now: NOW });
+    expect(retry).toMatchObject({ ok: true });
+  });
+
+  it("reports a cleanup that itself fails, without leaking a token", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const original = ctx.db.insert.bind(ctx.db);
+    const insertSpy = vi.spyOn(ctx.db, "insert").mockImplementation(((table: unknown) => {
+      if (table === accessLinks) throw new Error("boom");
+      return original(table as never);
+    }) as never);
+    const deleteSpy = vi.spyOn(ctx.db, "delete").mockImplementation((() => {
+      throw new Error("cannot delete");
+    }) as never);
+    try {
+      const input = form();
+      await expect(createTeamWithOwner(ctx.db, ip(), input, { now: NOW })).rejects.toThrow("boom");
+      expect(errors).toHaveBeenCalledOnce();
+      const message = String(errors.mock.calls[0][0]);
+      expect(message).toMatch(/half-made Team/);
+      expect(message).not.toMatch(/[A-Za-z0-9_-]{43}/);
+    } finally {
+      insertSpy.mockRestore();
+      deleteSpy.mockRestore();
+      errors.mockRestore();
+    }
   });
 });
 
