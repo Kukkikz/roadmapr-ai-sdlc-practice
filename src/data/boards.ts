@@ -37,5 +37,9 @@ export async function getBoardById(db: Db, boardId: string) {
 }
 
 export function listBoardsForTeam(db: Db, teamId: string) {
-  return db.select().from(boards).where(eq(boards.teamId, teamId)).orderBy(asc(boards.createdAt));
+  return db
+    .select()
+    .from(boards)
+    .where(eq(boards.teamId, teamId))
+    .orderBy(asc(boards.createdAt), asc(boards.id));
 }
