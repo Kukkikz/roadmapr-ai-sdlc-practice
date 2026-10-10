@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { signOutAction } from "@/components/auth/sign-out-action";
+import { DeleteTeamDialog } from "@/components/team/delete-team-dialog";
 import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
 import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
@@ -55,6 +56,9 @@ async function DashboardContent() {
         />
       ) : null}
       {session.member.role === "owner" ? <OwnerLinkPanel /> : null}
+      {session.member.role === "owner" ? (
+        <DeleteTeamDialog teamName={session.team.name} teamSlug={session.team.slug} />
+      ) : null}
       <form action={signOutAction}>
         <Button type="submit" variant="secondary">
           Sign out

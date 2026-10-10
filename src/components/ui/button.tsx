@@ -12,6 +12,9 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground active:bg-primary-active",
         secondary: "border-border bg-secondary text-secondary-foreground active:bg-surface-strong",
+        // DESIGN.md button-danger and button-danger-secondary: red is only for destructive actions.
+        danger: "bg-danger text-primary-foreground active:opacity-90",
+        "danger-secondary": "border-border bg-secondary text-danger active:bg-surface-strong",
         ghost: "text-foreground active:bg-surface-strong",
         link: "text-link underline-offset-4 active:text-link-active",
       },

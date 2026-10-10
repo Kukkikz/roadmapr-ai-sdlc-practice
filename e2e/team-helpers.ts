@@ -40,3 +40,20 @@ export async function joinWithInvite(
   await expect(page).toHaveURL(/\/dashboard$/);
   return { context, page };
 }
+
+export /** Creates a Team and returns the Owner link shown on the save-link card, then opens the dashboard. */
+async function createTeamKeepingOwnerLink(page: Page) {
+  const slug = `ol-${unique()}`;
+  await page.goto("/new");
+  await page.getByLabel("Team name").fill(`Team ${slug}`);
+  await page.getByLabel("Team slug").fill(slug);
+  await page.getByLabel("First Board name").fill("Ideas");
+  await page.getByLabel("Your display name").fill("Olga");
+  await page.getByRole("button", { name: "Create Team" }).click();
+  const link = page.getByTestId("owner-link");
+  await expect(link).toHaveText(/^https?:\/\/.+\/login\/[A-Za-z0-9_-]{43}$/);
+  const ownerLink = (await link.textContent()) ?? "";
+  await page.getByRole("link", { name: "Go to dashboard" }).click();
+  await expect(page.getByRole("heading", { name: `Team ${slug}` })).toBeVisible();
+  return { slug, ownerLink };
+}
