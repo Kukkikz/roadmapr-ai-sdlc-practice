@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "no-store" },
         ],
       },
+      {
+        // Pages that show a secret link once ("save your Owner link", new invite links): not
+        // cached, so Back after leaving fetches a fresh page instead of restoring the link.
+        source: "/:page(new|dashboard)",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
     ];
   },
   turbopack: {

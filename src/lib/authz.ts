@@ -34,3 +34,12 @@ export function authorize(session: SessionInfo | null, teamId: string, role: Mem
 export async function requireRole(teamId: string, role: MemberRole) {
   return authorize(await getSession(), teamId, role);
 }
+
+/**
+ * `requireRole` for actions on the signed-in Member's own Team, where the request names no
+ * Team (generate an invite link). The Team comes from the Session, never from the request.
+ */
+export async function requireSessionRole(role: MemberRole) {
+  const session = await getSession();
+  return authorize(session, session?.team.id ?? "", role);
+}

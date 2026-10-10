@@ -206,7 +206,7 @@ Each cluster ships with its screens and one Playwright spec, so Phase 6 only has
 ### Teams & Members
 
 - [x] Create team and first board (anyone, rate limited per IP); show the owner link once [US-3.1, G5]. Screens: create-team `98483959…`, save-link `a3f22361…` (`/new`; `createTeamWithOwner` in `src/lib/create-team.ts`; also signs the creator in; a failure after the Team exists deletes it again; the Board slug comes from its name, falling back to `feedback`)
-- [ ] Owner generates member invite links (7-day expiry, multi-use, revocable); redeeming asks for a display name [US-3.3]
+- [x] Owner generates member invite links (7-day expiry, multi-use, revocable); redeeming asks for a display name [US-3.3] (dashboard "Invite links" section for Owners; `src/lib/invite-links.ts`; the first protected actions, so the first callers of `requireSessionRole`; a new link is shown once and the list shows only status and dates; `/new` and `/dashboard` are `no-store` so Back cannot bring a shown-once link back)
 - [ ] Owner can generate a replacement owner link while signed in; a lost owner link with no signed-in session means a lost team (documented limitation) [US-3.2]
 - [ ] Owner removes members (soft removal: `removed_at`, sessions ended immediately, history keeps their name); the last owner can never be removed [US-3.4, G8]
 - [ ] A member can leave the team; the last owner leaves by deleting the team [US-3.7]. Screen: team settings `a4a2f569…`

@@ -96,6 +96,9 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-3.3** As an Owner, I can invite Members with a Member invite link.
 
 - AC: Generate a link (expires in 7 days, multi-use) and revoke it at any time.
+- AC: The dashboard has an "Invite links" section for Owners only; Members do not see it, and their requests to generate or revoke are refused.
+- AC: A new link is shown once, with a copy button, like the Owner link. Only its hash is stored, so afterwards the list shows when each link was created, when it expires and whether it is active, expired or revoked, but never the link itself.
+- AC: An Owner can revoke only their own Team's invite links. Revoking stops new joins; Members who already joined stay (removing them is US-3.4). Revoking a link that is already revoked or expired does nothing.
 - AC: Redeeming asks for a display name, creates a Member with role `member`, starts a session and redirects to the dashboard.
 - AC: Expired and revoked links show "link not valid".
 
