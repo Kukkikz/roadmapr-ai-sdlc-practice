@@ -19,6 +19,7 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "signin",
   "signup",
   "static",
+  "team-deleted",
 ]);
 
 export const SLUG_LIMITS = { min: 2, max: 40 } as const;

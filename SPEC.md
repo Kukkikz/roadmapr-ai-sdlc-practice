@@ -124,6 +124,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - AC: Deletion is permanent and cascades to everything under the Team; there is no undo.
 - AC: Every Owner link, Member invite link, Board share link and session of the Team stops working; Visitors get the generic "not found" page.
 - AC: The Team slug is freed immediately and can be claimed by a new Team.
+- AC: The dashboard has a "Danger zone" at the bottom, for Owners only, with a "Delete Team" button that opens a confirm dialog. The dialog lists what will be lost and asks me to type the Team slug; its "Delete Team" button stays disabled until the text matches exactly. The server checks the same, so a request without the exact slug deletes nothing, and a Member's request is refused.
+- AC: After deleting I am signed out and land on a "Team deleted" page at `/team-deleted`. Other Members' dashboards then show the generic "not found" page.
 
 **US-3.5** As a Member, I can sign out.
 
