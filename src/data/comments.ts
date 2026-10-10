@@ -14,6 +14,8 @@ export async function addComment(
   return row;
 }
 
+// The join key is computed (`'member:' || id`), so it cannot use the members index. Fine at
+// MVP sizes; storing a nullable member_id on these rows would fix it later.
 /**
  * Oldest first. Hidden Comments are included only for moderators. `authorTeamId` is the Team of
  * the Member who wrote it, or null for a Visitor; callers show the "Team" label only when it is

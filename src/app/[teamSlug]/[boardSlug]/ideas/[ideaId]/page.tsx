@@ -79,7 +79,7 @@ export default async function IdeaPage({
                 >
                   <p className="flex items-center gap-2 text-[13px] font-medium text-ink">
                     {fromTeam ? <Badge variant="open">Team</Badge> : null}
-                    {comment.authorName ?? (fromTeam ? team.name : "Anonymous")}
+                    {comment.authorName ?? "Anonymous"}
                     <span className="font-normal text-muted-foreground">
                       {formatDate(comment.createdAt)}
                     </span>

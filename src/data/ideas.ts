@@ -101,6 +101,8 @@ export async function listIdeas(db: Db, opts: ListIdeasOptions) {
   return rows.map((row) => ({ ...row, tags: byIdea.get(row.id) ?? [] }));
 }
 
+// The join key is computed (`'member:' || id`), so it cannot use the members index. Fine at
+// MVP sizes; storing a nullable member_id on these rows would fix it later.
 /**
  * One Idea, or null. Pass `boardId` so an Idea id from another Board does not resolve under
  * this Board's URL. Hidden Ideas resolve only with `includeHidden` (moderators); the public
