@@ -88,6 +88,19 @@ test("says so when the link cannot be copied", async ({ page }) => {
   await expect(page.getByText("Could not copy. Select the link above")).toBeVisible();
 });
 
+test("going Back after leaving does not bring the Owner link back", async ({ page }) => {
+  await fillForm(page, `e2e-${unique()}`);
+  await page.getByRole("button", { name: "Create Team" }).click();
+  await expect(page.getByTestId("owner-link")).toBeVisible();
+  await page.getByRole("link", { name: "Go to dashboard" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/new$/);
+  await expect(page.getByRole("heading", { name: "Create a Team" })).toBeVisible();
+  await expect(page.getByTestId("owner-link")).toHaveCount(0);
+});
+
 test("shows field errors for a reserved or taken slug and creates nothing", async ({ page }) => {
   await fillForm(page, "login");
   await page.getByRole("button", { name: "Create Team" }).click();

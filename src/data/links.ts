@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { accessLinks, members, teams, type LinkKind } from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
@@ -31,6 +31,21 @@ export async function findAccessLinkByHash(db: Db, tokenHash: string) {
     .leftJoin(members, eq(accessLinks.memberId, members.id))
     .where(eq(accessLinks.tokenHash, tokenHash));
   return row ?? null;
+}
+
+/** One link by id, or null. Callers must still check it belongs to the Team they act for. */
+export async function findAccessLinkById(db: Db, linkId: string) {
+  const [row] = await db.select().from(accessLinks).where(eq(accessLinks.id, linkId));
+  return row ?? null;
+}
+
+/** A Team's links of one kind, newest first. Never includes the token: only its hash is stored. */
+export function listAccessLinks(db: Db, input: { teamId: string; kind: LinkKind }) {
+  return db
+    .select()
+    .from(accessLinks)
+    .where(and(eq(accessLinks.teamId, input.teamId), eq(accessLinks.kind, input.kind)))
+    .orderBy(desc(accessLinks.createdAt), desc(accessLinks.id));
 }
 
 export async function revokeAccessLink(db: Db, linkId: string, now: Date = new Date()) {

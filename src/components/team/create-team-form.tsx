@@ -1,18 +1,14 @@
 "use client";
 
-import { useActionState, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
+import { useActionState, useState } from "react";
 import { createTeamAction, type CreateTeamState } from "@/components/team/create-team-action";
+import { SecretLink } from "@/components/team/secret-link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TEAM_LIMITS, type CreateTeamFields } from "@/lib/create-team-input";
 import { DISPLAY_NAME_MAX } from "@/lib/redeem-input";
 import { SLUG_LIMITS, slugify } from "@/lib/slugs";
-
-const noop = () => () => {};
-const originOnClient = () => window.location.origin;
-const originOnServer = () => "";
 
 function Field({
   id,
@@ -53,20 +49,6 @@ function Field({
 
 /** The one-time "save your Owner link" state (US-3.1). Leaving or reloading the page loses the link. */
 function SaveOwnerLink({ teamName, path }: { teamName: string; path: string }) {
-  const origin = useSyncExternalStore(noop, originOnClient, originOnServer);
-  const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
-  const url = `${origin}${path}`;
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied("copied");
-    } catch {
-      // No clipboard access (for example on a non-secure origin): the link is still selectable.
-      setCopied("failed");
-    }
-  }
-
   return (
     <section
       aria-labelledby="save-link-title"
@@ -79,26 +61,14 @@ function SaveOwnerLink({ teamName, path }: { teamName: string; path: string }) {
         Save this link now. It is shown only once. It signs you in as the Owner on any device, and
         anyone who has it can manage this Team.
       </p>
-      <code
-        data-testid="owner-link"
-        className="break-all rounded-md bg-primary-active px-4 py-3 font-mono text-[13px]"
-      >
-        {url}
-      </code>
-      <div className="flex gap-2">
-        <Button type="button" variant="secondary" onClick={copy}>
-          {copied === "copied" ? "Copied" : "Copy link"}
-        </Button>
-        <Link href="/dashboard" className={buttonVariants({ variant: "secondary" })}>
+      <SecretLink path={path} testId="owner-link">
+        {/* A plain link on purpose: a full page load drops this page's state, so the Owner
+            link is gone for good and Back cannot bring it back (US-3.1). */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/dashboard" className={buttonVariants({ variant: "secondary" })}>
           Go to dashboard
-        </Link>
-      </div>
-      <p className="sr-only" aria-live="polite">
-        {copied === "copied" ? "Link copied to the clipboard." : ""}
-      </p>
-      {copied === "failed" ? (
-        <p className="text-sm">Could not copy. Select the link above and copy it yourself.</p>
-      ) : null}
+        </a>
+      </SecretLink>
     </section>
   );
 }
