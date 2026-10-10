@@ -284,6 +284,7 @@ Test-first for security-sensitive logic and per-slice Playwright specs happen in
 ### Production Readiness
 
 - [ ] Error monitoring and basic logging
+- [ ] If slug probing or taken-slug attempts show up in the logs, add a loose per-IP limit for them (SPEC G5 says they are unlimited for now)
 - [ ] Verify rate limits work behind Vercel's proxy (`getClientIp()` from Phase 3 reads the correct client IP header)
 - [ ] Backup/restore approach for Neon documented (point-in-time restore steps; confirm the plan's retention window)
 - [ ] README with setup, scripts, architecture and deploy instructions

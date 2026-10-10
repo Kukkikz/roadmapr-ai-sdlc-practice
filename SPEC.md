@@ -11,7 +11,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 - **G5 Rate limits.** Limited actions return a clear "slow down" error, never a crash. Counters live in the `rate_limits` table. Limits use fixed windows (a burst across a window boundary can pass up to twice the limit) and are in the table below; every key listed for an action must pass. The client IP is read in one place (`getClientIp()`) and is used for rate limiting only.
 - **G6 Slugs.** Team and board slugs are lowercase, URL-safe, unique (team slug globally, board slug per team), and cannot be a reserved word (`login`, `api`, `dashboard`, `join`, ...).
 - **G7 Statuses.** `open` (default), `planned`, `in_progress`, `shipped`, `declined`. Any transition is allowed; every change is recorded.
-- **G8 Removal and deletion.** Members are _removed_ softly (row kept, `removed_at` set, history stays attributed). Teams and Boards are _deleted_ for good, cascading to everything beneath them, after the Owner types a confirmation. Ideas and Comments are never deleted, only hidden (a Tag's deletion removes it from Ideas).
+- **G8 Removal and deletion.** Members are _removed_ softly (row kept, `removed_at` set, history stays attributed). Teams and Boards are _deleted_ for good, cascading to everything beneath them, after the Owner types a confirmation. Ideas and Comments are never deleted, only hidden (a Tag's deletion removes it from Ideas). The one other delete is the undo of a Team whose creation failed before any link or Session was shown (US-3.1); nobody can reach such a Team.
 
 ### Rate limits (G5)
 
@@ -24,7 +24,7 @@ Behavioural spec for the MVP. `PLAN.md` says what to build in which order; `CONT
 | Create Team   | IP            | 3 per hour        |
 | Redeem link   | IP            | 10 per 10 minutes |
 
-Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so guessing tokens is throttled. Opening a link (the read-only "Continue" page) is deliberately not limited: tokens are 256 random bits, so guessing them is infeasible.
+Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so guessing tokens is throttled. Checking whether a Team slug is taken is deliberately not limited either (slugs are public in URLs, and a typo should not use up an attempt). Opening a link (the read-only "Continue" page) is deliberately not limited: tokens are 256 random bits, so guessing them is infeasible.
 
 ## Epic 1 — Visitors browse boards
 
