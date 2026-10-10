@@ -25,7 +25,7 @@ export function DeleteTeamDialog({ teamName, teamSlug }: { teamName: string; tea
   return (
     <section
       aria-labelledby="danger-zone-title"
-      className="flex flex-col gap-4 rounded-md border border-danger p-6"
+      className="flex flex-col gap-4 rounded-md border border-hairline p-6"
     >
       <div className="flex flex-col gap-1">
         <h2 id="danger-zone-title" className="text-xl font-medium text-danger">

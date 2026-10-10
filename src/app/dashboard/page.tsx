@@ -56,14 +56,15 @@ async function DashboardContent() {
         />
       ) : null}
       {session.member.role === "owner" ? <OwnerLinkPanel /> : null}
-      {session.member.role === "owner" ? (
-        <DeleteTeamDialog teamName={session.team.name} teamSlug={session.team.slug} />
-      ) : null}
       <form action={signOutAction}>
         <Button type="submit" variant="secondary">
           Sign out
         </Button>
       </form>
+      {/* Last on the page, as the SPEC says (US-3.8). */}
+      {session.member.role === "owner" ? (
+        <DeleteTeamDialog teamName={session.team.name} teamSlug={session.team.slug} />
+      ) : null}
     </>
   );
 }

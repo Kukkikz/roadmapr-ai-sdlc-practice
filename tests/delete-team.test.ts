@@ -15,8 +15,19 @@ import {
   getIdea,
   getTeamBySlug,
   listComments,
+  setIdeaStatus,
 } from "@/data";
-import { accessLinks, comments, members, sessions, teams, votes } from "@/db/schema";
+import {
+  accessLinks,
+  comments,
+  ideaStatusEvents,
+  ideaTags,
+  members,
+  sessions,
+  tags,
+  teams,
+  votes,
+} from "@/db/schema";
 import { createTeamWithOwner } from "@/lib/create-team";
 import { deleteTeamConfirmed } from "@/lib/delete-team";
 import { generateToken, hashToken } from "@/lib/link-token";
@@ -47,6 +58,7 @@ async function fullTeam() {
   await addVote(ctx.db, idea.id, "anon:voter");
   const tag = await createTag(ctx.db, { boardId: board.id, name: "bug", color: "#cc0000" });
   await assignTag(ctx.db, idea.id, tag.id);
+  await setIdeaStatus(ctx.db, idea.id, "planned", `member:${owner.id}`);
 
   const ownerToken = generateToken();
   await createAccessLink(ctx.db, {
@@ -75,7 +87,7 @@ async function fullTeam() {
     memberId: bo.id,
     expiresAt: new Date(NOW.getTime() + 86_400_000),
   });
-  return { team, owner, bo, board, idea, ownerToken, inviteToken, shareToken, sessionToken };
+  return { team, owner, bo, board, idea, tag, ownerToken, inviteToken, shareToken, sessionToken };
 }
 
 describe("deleteTeamConfirmed (US-3.8, G8)", () => {
@@ -118,6 +130,11 @@ describe("deleteTeamConfirmed (US-3.8, G8)", () => {
       await ctx.db.select().from(accessLinks).where(eq(accessLinks.teamId, t.team.id)),
     ).toEqual([]);
     expect(await ctx.db.select().from(comments).where(eq(comments.ideaId, t.idea.id))).toEqual([]);
+    expect(await ctx.db.select().from(tags).where(eq(tags.boardId, t.board.id))).toEqual([]);
+    expect(await ctx.db.select().from(ideaTags).where(eq(ideaTags.ideaId, t.idea.id))).toEqual([]);
+    expect(
+      await ctx.db.select().from(ideaStatusEvents).where(eq(ideaStatusEvents.ideaId, t.idea.id)),
+    ).toEqual([]);
   });
 
   it("stops every link and Session of the Team working", async () => {
