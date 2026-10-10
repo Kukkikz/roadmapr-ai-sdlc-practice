@@ -3,6 +3,7 @@ import { createBoard, createIdea, setIdeaHidden } from "@/data";
 import { teams } from "@/db/schema";
 import { newAnonId, signAnonId } from "@/lib/anon-cookie";
 import { getEnv } from "@/lib/env";
+import { rateLimitKey } from "@/lib/rate-limit";
 import { findBoardForVisitor, findIdeaForVisitor } from "@/lib/visitor-access";
 import { ANON_COOKIE, getVisitor, readVisitor } from "@/lib/visitor";
 import { createTestDb } from "./helpers/db";
@@ -112,8 +113,15 @@ describe("a signed-in Member (G1)", () => {
     const member = await getVisitor();
     sessionRef.current = { member: { id: "m2" } };
     const other = await getVisitor();
+    const anon = await (async () => {
+      sessionRef.current = null;
+      return getVisitor();
+    })();
     expect(member.anonId).not.toBe(other.anonId);
     expect(member.anonId).toMatch(/^member:/);
+    // The limiter keys differ, so a Member and a Visitor never share an allowance.
+    const key = (who: { anonId: string }) => rateLimitKey("submit", "anon", who.anonId);
+    expect(new Set([key(member), key(other), key(anon)]).size).toBe(3);
   });
 });
 

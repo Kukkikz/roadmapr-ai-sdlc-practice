@@ -94,9 +94,10 @@ export async function redeemLink(
   const sessionToken = generateToken();
   const expiresAt = new Date(now.getTime() + SESSION_LIFETIME_MS);
   await createSession(db, { tokenHash: hashToken(sessionToken), memberId, expiresAt });
-  // One browser, one Session: signing in again ends the one it held before.
+  // One browser, one Session: signing in again ends the one it held before. Best effort: the
+  // new Session already exists, so a failure here must not turn this into a failed sign-in.
   if (isTokenShape(input.previousSessionToken)) {
-    await deleteSession(db, hashToken(input.previousSessionToken));
+    await deleteSession(db, hashToken(input.previousSessionToken)).catch(() => {});
   }
   // Housekeeping without a scheduled job; it must never change the outcome.
   if (Math.random() < SESSION_PURGE_CHANCE) await purgeExpiredSessions(db, now).catch(() => {});

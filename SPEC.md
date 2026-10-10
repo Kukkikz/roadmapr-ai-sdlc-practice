@@ -184,6 +184,7 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 ## Known limitations (accepted)
 
 - Votes are tied to a cookie; clearing cookies allows revoting.
+- A signed-in Member acts as `member:<id>` and a signed-out one as their anonymous cookie (G1), so the same person can vote once under each identity.
 - Whoever holds a link has its access until it is revoked or rotated.
 - A lost Owner link with no signed-in session means a lost Team.
 - Deleting a Team or Board is permanent. A freed Team slug can be claimed by someone else, so old URLs may later open a different Team.
