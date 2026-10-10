@@ -6,7 +6,7 @@ import { getClientIp } from "@/lib/client-ip";
 import { formText } from "@/lib/form-data";
 import { redeemLink } from "@/lib/redeem";
 import type { RedeemKind } from "@/lib/redeem-input";
-import { setSessionCookie } from "@/lib/session";
+import { readSessionToken, setSessionCookie } from "@/lib/session";
 
 export type RedeemFormState = {
   error: "invalid" | "rate_limited" | "invalid_name";
@@ -26,6 +26,7 @@ export async function redeemAction(
   if (kind !== "owner" && kind !== "member_invite") return { error: "invalid" };
   const result = await redeemLink(getDb(), await getClientIp(), kind, formText(formData, "token"), {
     displayName: formText(formData, "displayName"),
+    previousSessionToken: await readSessionToken(),
   });
   if (!result.ok) {
     return result.error === "invalid_name"

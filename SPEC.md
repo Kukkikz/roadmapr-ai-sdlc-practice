@@ -118,7 +118,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 
 **US-3.5** As a Member, I can sign out.
 
-- AC: The session is deleted server-side and the cookie cleared.
+- AC: The session is deleted server-side and the cookie cleared. A copy of the old cookie no longer works.
+- AC: Signing in again on a browser ends the session that browser held; sessions on other devices are untouched.
 
 **US-3.6** Authorisation.
 

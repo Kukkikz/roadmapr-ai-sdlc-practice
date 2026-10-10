@@ -3,6 +3,7 @@ import {
   createAccessLink,
   createMember,
   findSessionByHash,
+  purgeExpiredSessions,
   removeMember,
   revokeAccessLink,
 } from "@/data";
@@ -225,6 +226,76 @@ describe("Member invite link (US-3.3)", () => {
       await redeemLink(ctx.db, ip(), "member_invite", token, { displayName: "Eve" }, NOW),
     ).toEqual({ ok: false, error: "invalid" });
     expect(await memberCount(team)).toBe(0);
+  });
+});
+
+describe("Session replacement and cleanup", () => {
+  it("ends the Session the browser held before when it signs in again", async () => {
+    const { token } = await ownerLink();
+    const first = await redeemLink(ctx.db, ip(), "owner", token, {}, NOW);
+    if (!first.ok) throw new Error("expected success");
+    const second = await redeemLink(
+      ctx.db,
+      ip(),
+      "owner",
+      token,
+      { previousSessionToken: first.sessionToken },
+      NOW,
+    );
+    if (!second.ok) throw new Error("expected success");
+    expect(await findSessionByHash(ctx.db, hashToken(first.sessionToken), NOW)).toBeNull();
+    expect(await findSessionByHash(ctx.db, hashToken(second.sessionToken), NOW)).not.toBeNull();
+  });
+
+  it("ignores a junk previous token and keeps other devices' Sessions", async () => {
+    const { token } = await ownerLink();
+    const device = await redeemLink(ctx.db, ip(), "owner", token, {}, NOW);
+    if (!device.ok) throw new Error("expected success");
+    const again = await redeemLink(
+      ctx.db,
+      ip(),
+      "owner",
+      token,
+      { previousSessionToken: "junk" },
+      NOW,
+    );
+    expect(again).toMatchObject({ ok: true });
+    expect(await findSessionByHash(ctx.db, hashToken(device.sessionToken), NOW)).not.toBeNull();
+  });
+
+  it("does not end the previous Session when the redeem is refused", async () => {
+    const { token } = await ownerLink();
+    const first = await redeemLink(ctx.db, ip(), "owner", token, {}, NOW);
+    if (!first.ok) throw new Error("expected success");
+    const refused = await redeemLink(
+      ctx.db,
+      ip(),
+      "owner",
+      generateToken(),
+      { previousSessionToken: first.sessionToken },
+      NOW,
+    );
+    expect(refused).toEqual({ ok: false, error: "invalid" });
+    expect(await findSessionByHash(ctx.db, hashToken(first.sessionToken), NOW)).not.toBeNull();
+  });
+
+  it("purgeExpiredSessions deletes only expired Sessions", async () => {
+    const { token } = await ownerLink();
+    const live = await redeemLink(ctx.db, ip(), "owner", token, {}, NOW);
+    if (!live.ok) throw new Error("expected success");
+    const old = await redeemLink(
+      ctx.db,
+      ip(),
+      "owner",
+      token,
+      {},
+      new Date(NOW.getTime() - SESSION_LIFETIME_MS - 1000),
+    );
+    if (!old.ok) throw new Error("expected success");
+    await purgeExpiredSessions(ctx.db, NOW);
+    const stored = (await ctx.db.select().from(sessions)).map((row) => row.tokenHash);
+    expect(stored).toContain(hashToken(live.sessionToken));
+    expect(stored).not.toContain(hashToken(old.sessionToken));
   });
 });
 

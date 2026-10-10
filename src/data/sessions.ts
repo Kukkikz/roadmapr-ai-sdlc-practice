@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, lte } from "drizzle-orm";
 import { members, sessions, teams } from "@/db/schema";
 import type { Db } from "./types";
 
@@ -29,6 +29,11 @@ export async function findSessionByHash(db: Db, tokenHash: string, now: Date = n
       ),
     );
   return row ?? null;
+}
+
+/** Deletes Sessions that expired at or before `now`. They are already refused; this keeps the table small. */
+export async function purgeExpiredSessions(db: Db, now: Date = new Date()) {
+  await db.delete(sessions).where(lte(sessions.expiresAt, now));
 }
 
 export async function deleteSession(db: Db, tokenHash: string) {
