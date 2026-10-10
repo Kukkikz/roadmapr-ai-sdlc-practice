@@ -37,3 +37,21 @@ export const slugSchema = z
   .max(SLUG_LIMITS.max, `Slug must be ${SLUG_LIMITS.max} characters or fewer.`)
   .regex(SLUG_PATTERN, "Use lowercase letters, numbers and single hyphens.")
   .refine((slug) => !isReservedSlug(slug), "This slug is reserved. Choose another.");
+
+/** A URL-safe slug from free text: "Feature Requests!" becomes "feature-requests". May be empty or too short. */
+export function slugify(text: string): string {
+  return text
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, SLUG_LIMITS.max)
+    .replace(/-+$/, "");
+}
+
+/** The slug for a Board from its name; "feedback" when the name gives nothing usable or a reserved word (G6). */
+export function boardSlugFor(name: string): string {
+  const slug = slugify(name);
+  return slugSchema.safeParse(slug).success ? slug : "feedback";
+}
