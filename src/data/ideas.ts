@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
-import { ideaStatusEvents, ideaTags, ideas, tags, type IdeaStatus } from "@/db/schema";
+import { ideaStatusEvents, ideaTags, ideas, members, tags, type IdeaStatus } from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
 
@@ -101,6 +101,8 @@ export async function listIdeas(db: Db, opts: ListIdeasOptions) {
   return rows.map((row) => ({ ...row, tags: byIdea.get(row.id) ?? [] }));
 }
 
+// The join key is computed (`'member:' || id`), so it cannot use the members index. Fine at
+// MVP sizes; storing a nullable member_id on these rows would fix it later.
 /**
  * One Idea, or null. Pass `boardId` so an Idea id from another Board does not resolve under
  * this Board's URL. Hidden Ideas resolve only with `includeHidden` (moderators); the public
@@ -119,8 +121,10 @@ export async function getIdea(
       idea: ideas,
       voteCount: voteCountSql,
       commentCount: commentCountSql(opts.includeHidden ?? false),
+      authorTeamId: members.teamId,
     })
     .from(ideas)
+    .leftJoin(members, sql`'member:' || ${members.id} = ${ideas.actorId}`)
     .where(and(...conditions));
   if (!row) return null;
   const ideaTagRows = await db
@@ -132,6 +136,8 @@ export async function getIdea(
     ...row.idea,
     voteCount: row.voteCount,
     commentCount: row.commentCount,
+    /** The Team of the Member who posted it, or null for a Visitor. */
+    authorTeamId: row.authorTeamId,
     tags: ideaTagRows,
   };
 }

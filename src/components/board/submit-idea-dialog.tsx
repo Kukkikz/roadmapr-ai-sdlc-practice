@@ -17,10 +17,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IDEA_LIMITS } from "@/lib/idea-input";
 import { plural } from "@/lib/format";
+import type { PostingAs } from "@/lib/posting-as";
 import type { SimilarIdea } from "@/lib/similar-ideas";
 import type { SubmitIdeaResult } from "@/lib/submit-idea";
 
 type BoardRef = { boardId: string; teamSlug: string; boardSlug: string };
+type WithPostingAs = { postingAs?: PostingAs | null };
 
 /** Wait this long after the last keystroke before looking for similar Ideas (US-2.1). */
 const HINT_DEBOUNCE_MS = 300;
@@ -57,11 +59,12 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 }
 
 function SubmitIdeaForm({
+  postingAs,
   boardId,
   teamSlug,
   boardSlug,
   onDone,
-}: BoardRef & { onDone: () => void }) {
+}: BoardRef & WithPostingAs & { onDone: () => void }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -160,20 +163,27 @@ function SubmitIdeaForm({
         <FieldError id="idea-description-error" message={fieldErrors.description} />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="idea-author">Display name (optional)</Label>
-        <Input
-          id="idea-author"
-          name="authorName"
-          value={authorName}
-          onChange={(event) => setAuthorName(event.target.value)}
-          maxLength={IDEA_LIMITS.authorName}
-          autoComplete="off"
-          aria-invalid={fieldErrors.authorName ? true : undefined}
-          aria-describedby={fieldErrors.authorName ? "idea-author-error" : undefined}
-        />
-        <FieldError id="idea-author-error" message={fieldErrors.authorName} />
-      </div>
+      {postingAs ? (
+        <p className="text-sm text-body">
+          You are signed in, so this idea is posted as <strong>{postingAs.name}</strong>
+          {postingAs.asTeam ? " and labelled Team" : ""}.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="idea-author">Display name (optional)</Label>
+          <Input
+            id="idea-author"
+            name="authorName"
+            value={authorName}
+            onChange={(event) => setAuthorName(event.target.value)}
+            maxLength={IDEA_LIMITS.authorName}
+            autoComplete="off"
+            aria-invalid={fieldErrors.authorName ? true : undefined}
+            aria-describedby={fieldErrors.authorName ? "idea-author-error" : undefined}
+          />
+          <FieldError id="idea-author-error" message={fieldErrors.authorName} />
+        </div>
+      )}
 
       <div className="flex justify-end gap-2">
         <DialogClose asChild>
@@ -190,7 +200,7 @@ function SubmitIdeaForm({
 }
 
 /** The "Submit idea" button and its dialog. The form mounts only while open, so it starts empty each time. */
-export function SubmitIdeaDialog(props: BoardRef) {
+export function SubmitIdeaDialog(props: BoardRef & WithPostingAs) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>

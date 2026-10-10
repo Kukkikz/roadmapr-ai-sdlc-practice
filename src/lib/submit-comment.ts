@@ -1,6 +1,7 @@
 import { addComment } from "@/data";
 import type { Db } from "@/data";
 import { submitCommentSchema, type SubmitCommentFields } from "./idea-input";
+import { authorNameFor } from "./author";
 import { enforceRateLimit } from "./rate-limit";
 import type { Visitor } from "./visitor";
 import { findIdeaForVisitor } from "./visitor-access";
@@ -52,7 +53,7 @@ export async function submitComment(
     ideaId: found.idea.id,
     body,
     actorId: visitor.actorId,
-    authorName: authorName ?? null,
+    authorName: authorNameFor(visitor, authorName),
   });
   return { ok: true, commentId: comment.id };
 }
