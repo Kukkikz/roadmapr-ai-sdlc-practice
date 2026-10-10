@@ -16,7 +16,11 @@ export async function getTeamBySlug(db: Db, slug: string) {
   return row ?? null;
 }
 
-/** Hard delete; everything under the Team goes with it (G8). Only the Owner's confirmed flow may call this, except to undo a half-made Team. */
-export async function deleteTeam(db: Db, teamId: string) {
+/**
+ * Undoes a Team whose creation failed before any link or Session was shown, so nobody can reach
+ * it (SPEC G8). Everything under it goes too. This is not the Owner's delete (US-3.8), which
+ * needs its own type-to-confirm flow; never call this on a Team people may be using.
+ */
+export async function undoTeamCreation(db: Db, teamId: string) {
   await db.delete(teams).where(eq(teams.id, teamId));
 }

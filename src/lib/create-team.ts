@@ -5,7 +5,7 @@ import {
   createSession,
   createTeam,
   deleteSession,
-  deleteTeam,
+  undoTeamCreation,
   getTeamBySlug,
 } from "@/data";
 import type { Db } from "@/data";
@@ -92,7 +92,7 @@ export async function createTeamWithOwner(
     return { ok: true, teamName: team.name, ownerToken, sessionToken, expiresAt };
   } catch (error) {
     // Never swallow this silently: an unreachable Team keeps its slug until someone removes it.
-    await deleteTeam(db, team.id).catch(() => {
+    await undoTeamCreation(db, team.id).catch(() => {
       console.error(`createTeamWithOwner: could not remove half-made Team ${team.id}`);
     });
     throw error;
