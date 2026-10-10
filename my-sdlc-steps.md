@@ -40,15 +40,15 @@ Each task followed the same loop:
 5. Update `SPEC.md`, `CONTEXT.md`, `DESIGN.md` and the ER diagram if behaviour changed.
 6. Branch, open a PR, wait for CI, then merge with my approval.
 
-| PR | Work |
-|----|------|
-| #5 | Phase 2: schema, migration, data-access layer, seed |
-| #8 | Phase 3a: public read pages (board, idea, roadmap) |
-| #9 | Phase 3 PR 1: anonymous identity and rate limiter |
-| #10 | Phase 3 PR 2: submit idea and duplicate hint |
-| #11 | Phase 3 PR 3: upvote toggle with optimistic UI |
-| #12 | Phase 3 PR 4: visitor comments |
-| #13 | `npm run db:reset` |
+| PR  | Work                                                       |
+| --- | ---------------------------------------------------------- |
+| #5  | Phase 2: schema, migration, data-access layer, seed        |
+| #8  | Phase 3a: public read pages (board, idea, roadmap)         |
+| #9  | Phase 3 PR 1: anonymous identity and rate limiter          |
+| #10 | Phase 3 PR 2: submit idea and duplicate hint               |
+| #11 | Phase 3 PR 3: upvote toggle with optimistic UI             |
+| #12 | Phase 3 PR 4: visitor comments                             |
+| #13 | `npm run db:reset`                                         |
 | #14 | Neon smoke-test record, longer timeout for slow vote tests |
 
 ## 6. Test and verify
