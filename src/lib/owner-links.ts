@@ -1,4 +1,4 @@
-import { createAccessLink, findActiveMember, listAccessLinks, revokeAccessLink } from "@/data";
+import { createAccessLink, findActiveMember, revokeOwnerLinksBefore } from "@/data";
 import type { Db } from "@/data";
 import { generateToken, hashToken } from "./link-token";
 
@@ -8,7 +8,7 @@ import { generateToken, hashToken } from "./link-token";
  * The raw token is returned once and never stored: the database keeps only its hash (G4).
  *
  * The new link is made first, so a failure part-way leaves the Owner with too many working
- * links, never none. Only this Owner's links are revoked; other Owners keep theirs. Their own
+ * links, never none; and only links made before it are revoked. Only this Owner's links are revoked; other Owners keep theirs. Their own
  * Sessions stay signed in. Returns null if `memberId` is not a current Owner of `teamId`.
  */
 export async function replaceOwnerLink(
@@ -27,11 +27,8 @@ export async function replaceOwnerLink(
     tokenHash: hashToken(token),
     memberId,
   });
-  const earlier = await listAccessLinks(db, { teamId, kind: "owner" });
-  for (const old of earlier) {
-    if (old.id !== link.id && old.memberId === memberId && !old.revokedAt) {
-      await revokeAccessLink(db, old.id, now);
-    }
-  }
+  // Only links made before this one: two simultaneous replacements cannot revoke each
+  // other's new link, so the later one always survives and the Owner is never left with none.
+  await revokeOwnerLinksBefore(db, { teamId, memberId, keep: link, now });
   return { id: link.id, token };
 }

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { createAccessLink, createMember, findSessionByHash, softRemoveMember } from "@/data";
 import { accessLinks, teams } from "@/db/schema";
@@ -161,5 +161,58 @@ describe("replaceOwnerLink (US-3.2)", () => {
     expect(await replaceOwnerLink(ctx.db, other, owner.id, NOW)).toBeNull();
     expect(await replaceOwnerLink(ctx.db, team, "no-such-member", NOW)).toBeNull();
     expect((await ctx.db.select().from(accessLinks)).length).toBe(before);
+  });
+
+  it("creates the new link before revoking the old: a failed create leaves the old one working", async () => {
+    const team = await newTeam();
+    const { owner, token: old } = await ownerWithLink(team);
+    const original = ctx.db.insert.bind(ctx.db);
+    const spy = vi.spyOn(ctx.db, "insert").mockImplementation(((table: unknown) => {
+      if (table === accessLinks) throw new Error("boom");
+      return original(table as never);
+    }) as never);
+    try {
+      await expect(replaceOwnerLink(ctx.db, team, owner.id, NOW)).rejects.toThrow("boom");
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await works(old)).toBe(true);
+  });
+
+  it("two replacements at once never leave the Owner without a working link", async () => {
+    const team = await newTeam();
+    const { owner, token: old } = await ownerWithLink(team);
+    const [a, b] = await Promise.all([
+      replaceOwnerLink(ctx.db, team, owner.id, NOW),
+      replaceOwnerLink(ctx.db, team, owner.id, NOW),
+    ]);
+    const working = [old, a!.token, b!.token].filter((token) => token);
+    const results = await Promise.all(working.map((token) => works(token)));
+    expect(results.filter(Boolean).length).toBeGreaterThanOrEqual(1);
+    expect(await works(old)).toBe(false);
+  });
+
+  it("revokes only links made before the new one, never a newer one", async () => {
+    const team = await newTeam();
+    const { owner } = await ownerWithLink(team);
+    const first = await replaceOwnerLink(ctx.db, team, owner.id, NOW);
+    // A link that is newer than `first`, as a concurrent replacement would have made it.
+    const newer = generateToken();
+    await createAccessLink(ctx.db, {
+      teamId: team,
+      kind: "owner",
+      tokenHash: hashToken(newer),
+      memberId: owner.id,
+    });
+    const { revokeOwnerLinksBefore } = await import("@/data");
+    const [firstRow] = await ctx.db.select().from(accessLinks).where(eq(accessLinks.id, first!.id));
+    await revokeOwnerLinksBefore(ctx.db, {
+      teamId: team,
+      memberId: owner.id,
+      keep: { id: firstRow.id, createdAt: firstRow.createdAt },
+      now: NOW,
+    });
+    expect(await works(first!.token)).toBe(true);
+    expect(await works(newer)).toBe(true);
   });
 });

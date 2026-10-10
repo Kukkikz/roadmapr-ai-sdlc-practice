@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
 import { accessLinks, members, teams, type LinkKind } from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
@@ -46,6 +46,37 @@ export function listAccessLinks(db: Db, input: { teamId: string; kind: LinkKind 
     .from(accessLinks)
     .where(and(eq(accessLinks.teamId, input.teamId), eq(accessLinks.kind, input.kind)))
     .orderBy(desc(accessLinks.createdAt), desc(accessLinks.id));
+}
+
+/**
+ * Revokes a Member's un-revoked Owner links that were made before `keep` (older by creation time,
+ * ties broken by id), in one statement. Newer links and `keep` itself are left alone, so of two
+ * simultaneous replacements the later one always survives.
+ */
+export async function revokeOwnerLinksBefore(
+  db: Db,
+  input: {
+    teamId: string;
+    memberId: string;
+    keep: { id: string; createdAt: Date };
+    now?: Date;
+  },
+) {
+  await db
+    .update(accessLinks)
+    .set({ revokedAt: input.now ?? new Date() })
+    .where(
+      and(
+        eq(accessLinks.teamId, input.teamId),
+        eq(accessLinks.memberId, input.memberId),
+        eq(accessLinks.kind, "owner"),
+        isNull(accessLinks.revokedAt),
+        or(
+          lt(accessLinks.createdAt, input.keep.createdAt),
+          and(eq(accessLinks.createdAt, input.keep.createdAt), lt(accessLinks.id, input.keep.id)),
+        ),
+      ),
+    );
 }
 
 export async function revokeAccessLink(db: Db, linkId: string, now: Date = new Date()) {
