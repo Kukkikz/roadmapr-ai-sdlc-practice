@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { signOutAction } from "@/components/auth/sign-out-action";
+import { BoardsPanel } from "@/components/team/boards-panel";
 import { DeleteTeamDialog } from "@/components/team/delete-team-dialog";
 import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
 import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
 import { Button } from "@/components/ui/button";
-import { listActiveMembers } from "@/data";
+import { listActiveMembers, listBoardsForTeam } from "@/data";
 import { getDb } from "@/db";
 import { listInviteLinks } from "@/lib/invite-links";
 import { getSession } from "@/lib/session";
@@ -26,9 +27,10 @@ async function DashboardContent() {
   if (!session) notFound();
   // Only Owners manage links (US-3.6); the action refuses anyone else as well.
   const db = getDb();
-  const [invites, members] = await Promise.all([
+  const [invites, members, boards] = await Promise.all([
     session.member.role === "owner" ? listInviteLinks(db, session.team.id) : null,
     listActiveMembers(db, session.team.id),
+    listBoardsForTeam(db, session.team.id),
   ]);
   return (
     <>
@@ -36,6 +38,16 @@ async function DashboardContent() {
       <p className="text-base text-body">
         Signed in as {session.member.displayName} ({session.member.role}).
       </p>
+      <BoardsPanel
+        boards={boards.map((board) => ({
+          id: board.id,
+          name: board.name,
+          slug: board.slug,
+          isPublic: board.visibility === "public",
+        }))}
+        teamSlug={session.team.slug}
+        isOwner={session.member.role === "owner"}
+      />
       <MembersPanel
         members={members.map((member) => ({
           id: member.id,

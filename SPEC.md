@@ -144,6 +144,9 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 
 - AC: Name, slug, description, visibility (public or private).
 - AC: Public URL is `/{team-slug}/{board-slug}`.
+- AC: The dashboard lists the Team's Boards (name, whether it is public, and a link) for every signed-in Member. Owners get a "Create board" button, and when the Team has no Boards the list says so and offers it (see US-4.3). A Member sees "Ask an Owner to create one" instead.
+- AC: Create board takes a name, a slug and an optional description. The slug follows G6 and is unique within the Team (a taken slug is a field error; two Teams may use the same Board slug). Only Owners can create Boards, and always for their own Team.
+- AC (interim): a new Board is Public. Choosing Private and editing a Board arrive with the share-link work (US-4.2), because a Private board cannot yet be opened even by its own Team.
 
 **US-4.2** As an Owner, I can manage a Private board's share link.
 
