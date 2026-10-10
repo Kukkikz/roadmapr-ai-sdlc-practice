@@ -4,6 +4,8 @@ import { Skeleton } from "@/components/board/skeleton";
 import { SubmitIdeaDialog } from "@/components/board/submit-idea-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { getVisibleBoard } from "@/lib/board-view";
+import { postingAsFor } from "@/lib/posting-as";
+import { readVisitor } from "@/lib/visitor";
 
 async function BoardNav({ params }: { params: LayoutProps<"/[teamSlug]/[boardSlug]">["params"] }) {
   const { teamSlug, boardSlug } = await params;
@@ -11,6 +13,7 @@ async function BoardNav({ params }: { params: LayoutProps<"/[teamSlug]/[boardSlu
   // A missing or Private board renders the not-found page from the page itself.
   if (!found) return null;
   const basePath = `/${found.team.slug}/${found.board.slug}`;
+  const postingAs = postingAsFor(await readVisitor(), found.team.id);
   return (
     <>
       <Link
@@ -27,6 +30,7 @@ async function BoardNav({ params }: { params: LayoutProps<"/[teamSlug]/[boardSlu
           boardId={found.board.id}
           teamSlug={found.team.slug}
           boardSlug={found.board.slug}
+          postingAs={postingAs}
         />
       </nav>
     </>

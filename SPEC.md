@@ -177,6 +177,9 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-5.4** As a Member, I can reply as the team.
 
 - AC: My Comments are labelled with the team and my display name.
+- AC: The label is set by the server, never typed. While I am signed in, the Comment and Submit Idea forms have no display name field; they say whose name will be used. What I post is stored under my display name and my `member:` Actor, whatever the request says.
+- AC: The "Team" label appears only when the author is a Member of the Team that owns the Board. A Member of another Team who posts here appears under their display name with no "Team" label.
+- AC: My Ideas are labelled the same way. If I later leave or am removed, my past Ideas and Comments keep my display name and the "Team" label (US-3.4).
 
 **US-5.5** As a Member, I see a moderation queue.
 
