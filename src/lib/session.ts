@@ -18,6 +18,16 @@ export async function setSessionCookie(token: string, expiresAt: Date): Promise<
   });
 }
 
+/** The raw Session token in this request's cookie, if it has the right shape. */
+export async function readSessionToken(): Promise<string | null> {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  return isTokenShape(token) ? token : null;
+}
+
+export async function clearSessionCookie(): Promise<void> {
+  (await cookies()).delete(SESSION_COOKIE);
+}
+
 /**
  * The signed-in Member and Team for this request, or null. Read-only, so it is safe in Server
  * Components. A removed Member, an expired Session and a forged cookie all give null (G8).
@@ -25,8 +35,8 @@ export async function setSessionCookie(token: string, expiresAt: Date): Promise<
 export async function getSession() {
   // Whether a Session has expired depends on the clock, so render per request, never at build.
   await connection();
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!isTokenShape(token)) return null;
+  const token = await readSessionToken();
+  if (!token) return null;
   const found = await findSessionByHash(getDb(), hashToken(token));
   return found ? { member: found.member, team: found.team } : null;
 }

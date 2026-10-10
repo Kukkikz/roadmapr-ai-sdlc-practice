@@ -118,7 +118,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 
 **US-3.5** As a Member, I can sign out.
 
-- AC: The session is deleted server-side and the cookie cleared.
+- AC: The session is deleted server-side and the cookie cleared. A copy of the old cookie no longer works.
+- AC: Signing in again on a browser ends the session that browser held; sessions on other devices are untouched.
 
 **US-3.6** Authorisation.
 
@@ -183,6 +184,7 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 ## Known limitations (accepted)
 
 - Votes are tied to a cookie; clearing cookies allows revoting.
+- A signed-in Member acts as `member:<id>` and a signed-out one as their anonymous cookie (G1), so the same person can vote once under each identity.
 - Whoever holds a link has its access until it is revoked or rotated.
 - A lost Owner link with no signed-in session means a lost Team.
 - Deleting a Team or Board is permanent. A freed Team slug can be claimed by someone else, so old URLs may later open a different Team.

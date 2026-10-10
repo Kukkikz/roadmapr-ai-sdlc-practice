@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { signOutAction } from "@/components/auth/sign-out-action";
+import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/session";
 
 async function DashboardContent() {
@@ -12,6 +14,11 @@ async function DashboardContent() {
       <p className="text-base text-body">
         Signed in as {session.member.displayName} ({session.member.role}).
       </p>
+      <form action={signOutAction}>
+        <Button type="submit" variant="secondary">
+          Sign out
+        </Button>
+      </form>
     </>
   );
 }

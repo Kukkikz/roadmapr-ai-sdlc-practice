@@ -1,4 +1,10 @@
-import { createMember, createSession, findAccessLinkByHash } from "@/data";
+import {
+  createMember,
+  createSession,
+  deleteSession,
+  findAccessLinkByHash,
+  purgeExpiredSessions,
+} from "@/data";
 import type { Db } from "@/data";
 import { generateToken, hashToken, isTokenShape } from "./link-token";
 import { enforceRateLimit } from "./rate-limit";
@@ -6,6 +12,8 @@ import { displayNameSchema, type RedeemKind } from "./redeem-input";
 
 /** SPEC US-3.2: 30 days from sign-in, never extended. */
 export const SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
+
+const SESSION_PURGE_CHANCE = 0.01;
 
 /**
  * The usable link behind a token for this path, or null. Every failure looks the same, so a
@@ -58,7 +66,7 @@ export async function redeemLink(
   ip: string,
   kind: RedeemKind,
   token: unknown,
-  input: { displayName?: unknown },
+  input: { displayName?: unknown; previousSessionToken?: unknown },
   now: Date = new Date(),
 ): Promise<RedeemResult> {
   if (!(await enforceRateLimit(db, "redeem", { ip }, now))) {
@@ -86,5 +94,12 @@ export async function redeemLink(
   const sessionToken = generateToken();
   const expiresAt = new Date(now.getTime() + SESSION_LIFETIME_MS);
   await createSession(db, { tokenHash: hashToken(sessionToken), memberId, expiresAt });
+  // One browser, one Session: signing in again ends the one it held before. Best effort: the
+  // new Session already exists, so a failure here must not turn this into a failed sign-in.
+  if (isTokenShape(input.previousSessionToken)) {
+    await deleteSession(db, hashToken(input.previousSessionToken)).catch(() => {});
+  }
+  // Housekeeping without a scheduled job; it must never change the outcome.
+  if (Math.random() < SESSION_PURGE_CHANCE) await purgeExpiredSessions(db, now).catch(() => {});
   return { ok: true, sessionToken, expiresAt };
 }

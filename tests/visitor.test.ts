@@ -3,9 +3,14 @@ import { createBoard, createIdea, setIdeaHidden } from "@/data";
 import { teams } from "@/db/schema";
 import { newAnonId, signAnonId } from "@/lib/anon-cookie";
 import { getEnv } from "@/lib/env";
+import { rateLimitKey } from "@/lib/rate-limit";
 import { findBoardForVisitor, findIdeaForVisitor } from "@/lib/visitor-access";
 import { ANON_COOKIE, getVisitor, readVisitor } from "@/lib/visitor";
 import { createTestDb } from "./helpers/db";
+
+// The signed-in Member (or null) that `getSession` reports.
+const sessionRef = vi.hoisted(() => ({ current: null as null | { member: { id: string } } }));
+vi.mock("@/lib/session", () => ({ getSession: async () => sessionRef.current }));
 
 // A minimal cookie jar standing in for Next's request cookies.
 const jar = new Map<string, string>();
@@ -21,6 +26,7 @@ vi.mock("next/headers", () => ({
 }));
 
 beforeEach(() => {
+  sessionRef.current = null;
   jar.clear();
   setSpy.mockClear();
 });
@@ -74,6 +80,48 @@ describe("getVisitor / readVisitor", () => {
     const attacker = await getVisitor();
     expect(attacker.anonId).not.toBe(victim.anonId);
     expect(await readVisitor()).toEqual(attacker);
+  });
+});
+
+describe("a signed-in Member (G1)", () => {
+  it("acts as member:<id>, never as their anonymous cookie", async () => {
+    const anon = await getVisitor();
+    sessionRef.current = { member: { id: "m1" } };
+    const expected = { anonId: "member:m1", actorId: "member:m1", memberId: "m1" };
+    expect(await readVisitor()).toEqual(expected);
+    expect(await getVisitor()).toEqual(expected);
+    expect((await getVisitor()).actorId).not.toBe(anon.actorId);
+  });
+
+  it("is not issued an anonymous cookie", async () => {
+    sessionRef.current = { member: { id: "m1" } };
+    await getVisitor();
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(jar.has(ANON_COOKIE)).toBe(false);
+  });
+
+  it("goes back to the anonymous identity after signing out", async () => {
+    const anon = await getVisitor();
+    sessionRef.current = { member: { id: "m1" } };
+    expect((await readVisitor())?.actorId).toBe("member:m1");
+    sessionRef.current = null;
+    expect(await readVisitor()).toEqual(anon);
+  });
+
+  it("gets a rate-limit identity of their own, never a Visitor's", async () => {
+    sessionRef.current = { member: { id: "m1" } };
+    const member = await getVisitor();
+    sessionRef.current = { member: { id: "m2" } };
+    const other = await getVisitor();
+    const anon = await (async () => {
+      sessionRef.current = null;
+      return getVisitor();
+    })();
+    expect(member.anonId).not.toBe(other.anonId);
+    expect(member.anonId).toMatch(/^member:/);
+    // The limiter keys differ, so a Member and a Visitor never share an allowance.
+    const key = (who: { anonId: string }) => rateLimitKey("submit", "anon", who.anonId);
+    expect(new Set([key(member), key(other), key(anon)]).size).toBe(3);
   });
 });
 
