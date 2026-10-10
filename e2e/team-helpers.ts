@@ -41,8 +41,8 @@ export async function joinWithInvite(
   return { context, page };
 }
 
-export /** Creates a Team and returns the Owner link shown on the save-link card, then opens the dashboard. */
-async function createTeamKeepingOwnerLink(page: Page) {
+/** Creates a Team and returns the Owner link shown on the save-link card, then opens the dashboard. */
+export async function createTeamKeepingOwnerLink(page: Page) {
   const slug = `ol-${unique()}`;
   await page.goto("/new");
   await page.getByLabel("Team name").fill(`Team ${slug}`);
