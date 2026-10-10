@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { signOutAction } from "@/components/auth/sign-out-action";
 import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
+import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
 import { Button } from "@/components/ui/button";
 import { listActiveMembers } from "@/data";
 import { getDb } from "@/db";
@@ -53,6 +54,7 @@ async function DashboardContent() {
           }))}
         />
       ) : null}
+      {session.member.role === "owner" ? <OwnerLinkPanel /> : null}
       <form action={signOutAction}>
         <Button type="submit" variant="secondary">
           Sign out
