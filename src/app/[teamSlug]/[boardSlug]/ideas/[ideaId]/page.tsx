@@ -5,9 +5,9 @@ import { VoteButton } from "@/components/board/vote-button";
 import { Badge } from "@/components/ui/badge";
 import { getIdea, hasVoted, listComments } from "@/data";
 import { getDb } from "@/db";
-import { isMemberActor } from "@/lib/actor";
 import { getVisibleBoard } from "@/lib/board-view";
 import { formatDate } from "@/lib/format";
+import { postingAsFor } from "@/lib/posting-as";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
 import { readVisitor } from "@/lib/visitor";
 import { cn } from "@/lib/utils";
@@ -47,8 +47,11 @@ export default async function IdeaPage({
               <Badge key={tag.id}>{tag.name}</Badge>
             ))}
           </div>
-          <p className="text-[13px] text-muted-foreground">
-            {idea.authorName ?? "Anonymous"} · {formatDate(idea.createdAt)}
+          <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+            {idea.authorTeamId === team.id ? <Badge variant="open">Team</Badge> : null}
+            <span>
+              {idea.authorName ?? "Anonymous"} · {formatDate(idea.createdAt)}
+            </span>
           </p>
         </div>
       </header>
@@ -64,7 +67,8 @@ export default async function IdeaPage({
         {comments.length > 0 ? (
           <ul className="flex flex-col gap-4">
             {comments.map((comment) => {
-              const fromTeam = isMemberActor(comment.actorId);
+              // Only a Member of this Board's own Team is shown as the Team (US-5.4).
+              const fromTeam = comment.authorTeamId === team.id;
               return (
                 <li
                   key={comment.id}
@@ -88,7 +92,7 @@ export default async function IdeaPage({
         ) : (
           <p className="text-body">No comments yet.</p>
         )}
-        <CommentForm ideaId={idea.id} />
+        <CommentForm ideaId={idea.id} postingAs={postingAsFor(visitor, team.id)} />
       </section>
     </article>
   );

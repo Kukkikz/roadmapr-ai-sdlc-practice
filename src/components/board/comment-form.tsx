@@ -8,10 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { COMMENT_LIMITS } from "@/lib/idea-input";
+import type { PostingAs } from "@/lib/posting-as";
 import type { SubmitCommentResult } from "@/lib/submit-comment";
 
 /** Add a Comment as a Visitor (US-2.3). The new Comment appears in the list above on success. */
-export function CommentForm({ ideaId }: { ideaId: string }) {
+export function CommentForm({
+  ideaId,
+  postingAs,
+}: {
+  ideaId: string;
+  postingAs?: PostingAs | null;
+}) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [authorName, setAuthorName] = useState("");
@@ -75,28 +82,35 @@ export function CommentForm({ ideaId }: { ideaId: string }) {
       </div>
 
       <div className="flex items-end gap-4">
-        <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor="comment-author">Display name (optional)</Label>
-          <Input
-            id="comment-author"
-            name="authorName"
-            value={authorName}
-            onChange={(event) => setAuthorName(event.target.value)}
-            maxLength={COMMENT_LIMITS.authorName}
-            autoComplete="off"
-            aria-invalid={fieldErrors.authorName ? true : undefined}
-            aria-describedby={fieldErrors.authorName ? "comment-author-error" : undefined}
-          />
-          {fieldErrors.authorName ? (
-            <p
-              id="comment-author-error"
-              role="alert"
-              className="text-[13px] font-medium text-danger"
-            >
-              {fieldErrors.authorName}
-            </p>
-          ) : null}
-        </div>
+        {postingAs ? (
+          <p className="flex-1 text-sm text-body">
+            You are signed in, so this comment is posted as <strong>{postingAs.name}</strong>
+            {postingAs.asTeam ? " and labelled Team" : ""}.
+          </p>
+        ) : (
+          <div className="flex flex-1 flex-col gap-2">
+            <Label htmlFor="comment-author">Display name (optional)</Label>
+            <Input
+              id="comment-author"
+              name="authorName"
+              value={authorName}
+              onChange={(event) => setAuthorName(event.target.value)}
+              maxLength={COMMENT_LIMITS.authorName}
+              autoComplete="off"
+              aria-invalid={fieldErrors.authorName ? true : undefined}
+              aria-describedby={fieldErrors.authorName ? "comment-author-error" : undefined}
+            />
+            {fieldErrors.authorName ? (
+              <p
+                id="comment-author-error"
+                role="alert"
+                className="text-[13px] font-medium text-danger"
+              >
+                {fieldErrors.authorName}
+              </p>
+            ) : null}
+          </div>
+        )}
         <Button type="submit" disabled={pending}>
           {pending ? "Posting…" : "Post comment"}
         </Button>

@@ -13,15 +13,28 @@ const MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
  * value the rate limiter keys on; for a Member it is the same `member:<id>` string, so a Member
  * never shares an allowance with, or borrows, an anonymous cookie.
  */
-export type Visitor = { anonId: string; actorId: string; memberId?: string };
+export type Visitor = {
+  anonId: string;
+  actorId: string;
+  /** Set for a signed-in Member only, from the Session (never from the request). */
+  memberId?: string;
+  teamId?: string;
+  displayName?: string;
+};
 
 function toVisitor(anonId: string): Visitor {
   return { anonId, actorId: `anon:${anonId}` };
 }
 
-function toMember(memberId: string): Visitor {
-  const actorId = `member:${memberId}`;
-  return { anonId: actorId, actorId, memberId };
+function toMember(member: { id: string; teamId: string; displayName: string }): Visitor {
+  const actorId = `member:${member.id}`;
+  return {
+    anonId: actorId,
+    actorId,
+    memberId: member.id,
+    teamId: member.teamId,
+    displayName: member.displayName,
+  };
 }
 
 /**
@@ -32,7 +45,7 @@ function toMember(memberId: string): Visitor {
  */
 export async function readVisitor(): Promise<Visitor | null> {
   const session = await getSession();
-  if (session) return toMember(session.member.id);
+  if (session) return toMember(session.member);
   const store = await cookies();
   const anonId = verifyAnonCookie(store.get(ANON_COOKIE)?.value, getEnv().SESSION_SECRET);
   return anonId ? toVisitor(anonId) : null;

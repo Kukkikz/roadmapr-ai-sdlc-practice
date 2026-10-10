@@ -1,5 +1,5 @@
-import { and, asc, eq } from "drizzle-orm";
-import { comments } from "@/db/schema";
+import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
+import { comments, members } from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
 
@@ -14,12 +14,21 @@ export async function addComment(
   return row;
 }
 
-/** Oldest first. Hidden Comments are included only for moderators. */
+/**
+ * Oldest first. Hidden Comments are included only for moderators. `authorTeamId` is the Team of
+ * the Member who wrote it, or null for a Visitor; callers show the "Team" label only when it is
+ * the Board's own Team. Removed Members keep their row, so their past Comments keep the label.
+ */
 export function listComments(db: Db, ideaId: string, opts: { includeHidden?: boolean } = {}) {
   const where = opts.includeHidden
     ? eq(comments.ideaId, ideaId)
     : and(eq(comments.ideaId, ideaId), eq(comments.hidden, false));
-  return db.select().from(comments).where(where).orderBy(asc(comments.createdAt));
+  return db
+    .select({ ...getTableColumns(comments), authorTeamId: members.teamId })
+    .from(comments)
+    .leftJoin(members, sql`'member:' || ${members.id} = ${comments.actorId}`)
+    .where(where)
+    .orderBy(asc(comments.createdAt), asc(comments.id));
 }
 
 /** Comments are never deleted, only hidden. */

@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
-import { ideaStatusEvents, ideaTags, ideas, tags, type IdeaStatus } from "@/db/schema";
+import { ideaStatusEvents, ideaTags, ideas, members, tags, type IdeaStatus } from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
 
@@ -119,8 +119,10 @@ export async function getIdea(
       idea: ideas,
       voteCount: voteCountSql,
       commentCount: commentCountSql(opts.includeHidden ?? false),
+      authorTeamId: members.teamId,
     })
     .from(ideas)
+    .leftJoin(members, sql`'member:' || ${members.id} = ${ideas.actorId}`)
     .where(and(...conditions));
   if (!row) return null;
   const ideaTagRows = await db
@@ -132,6 +134,8 @@ export async function getIdea(
     ...row.idea,
     voteCount: row.voteCount,
     commentCount: row.commentCount,
+    /** The Team of the Member who posted it, or null for a Visitor. */
+    authorTeamId: row.authorTeamId,
     tags: ideaTagRows,
   };
 }
