@@ -165,6 +165,7 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - AC: Deletion is permanent and cascades to the Board's Ideas and everything under them, its Tags and its Board share link; there is no undo.
 - AC: The Board URL returns the generic "not found" page, and its slug is freed for the Team.
 - AC: A Team may have zero Boards; the dashboard then offers "Create board".
+- AC: Each Board in the dashboard list has a "Delete" button for Owners. Only Owners can delete, and only Boards of their own Team; a Board of another Team is answered like a missing one, and nothing is deleted when the typed name does not match (checked on the server too).
 
 ## Epic 5 — Roadmap and moderation (Members)
 

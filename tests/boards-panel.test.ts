@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/components/team/board-actions", () => ({
   createBoardAction: vi.fn(),
   editBoardAction: vi.fn(),
+  deleteBoardAction: vi.fn(),
+  rotateShareLinkAction: vi.fn(),
 }));
 
 const { BoardsPanel } = await import("@/components/team/boards-panel");
@@ -56,6 +58,14 @@ describe("BoardsPanel (US-4.1, US-4.3)", () => {
     const boards = [board("1", "Ideas", "ideas-board")];
     expect(render({ boards, teamSlug: "acme", isOwner: true })).toContain("Create board");
     expect(render({ boards, teamSlug: "acme", isOwner: false })).not.toContain("Create board");
+  });
+
+  it("gives Owners a Delete button on each Board, and Members none", () => {
+    const boards = [board("1", "Ideas", "ideas-board")];
+    expect(render({ boards, teamSlug: "acme", isOwner: true })).toContain(
+      'aria-label="Delete Ideas"',
+    );
+    expect(render({ boards, teamSlug: "acme", isOwner: false })).not.toContain("Delete");
   });
 
   it("escapes Board names instead of rendering markup", () => {

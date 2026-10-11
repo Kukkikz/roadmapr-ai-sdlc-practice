@@ -18,7 +18,7 @@ vi.mock("next/cache", () => ({ revalidatePath: revalidate }));
 let ctx: Awaited<ReturnType<typeof createTestDb>>;
 vi.mock("@/db", () => ({ getDb: () => ctx.db }));
 
-const { createBoardAction, editBoardAction, rotateShareLinkAction } =
+const { createBoardAction, editBoardAction, rotateShareLinkAction, deleteBoardAction } =
   await import("@/components/team/board-actions");
 
 type Who = { id: string; teamId: string; role: "owner" | "member" };
@@ -267,6 +267,80 @@ describe("rotateShareLinkAction (US-4.2, US-3.6)", () => {
   it("handles a non-string board id without error", async () => {
     await setup("owner");
     expect(await rotateShareLinkAction(undefined as unknown as string)).toEqual({
+      ok: false,
+      error: "not-found",
+    });
+  });
+});
+
+describe("deleteBoardAction (US-4.3, US-3.6)", () => {
+  async function setup(role: "owner" | "member") {
+    const team = await newTeam();
+    const board = await createBoard(ctx.db, { teamId: team.id, name: "Bugs", slug: "bugs" });
+    const who = await join(team.id, role);
+    sessionRef.current = sessionOf(who, team);
+    return { team, board };
+  }
+
+  it("lets an Owner delete a Board of their own Team after typing its name", async () => {
+    const { team, board } = await setup("owner");
+    expect(
+      await deleteBoardAction(null, form({ boardId: board.id, confirmation: "Bugs" })),
+    ).toEqual({
+      ok: true,
+    });
+    expect(await getBoardBySlugs(ctx.db, team.slug, "bugs")).toBeNull();
+    expect(revalidate).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("deletes nothing when the typed name is wrong or missing", async () => {
+    const { team, board } = await setup("owner");
+    const expected = { ok: false, error: "wrong_confirmation" };
+    expect(
+      await deleteBoardAction(null, form({ boardId: board.id, confirmation: "bugs" })),
+    ).toEqual(expected);
+    expect(await deleteBoardAction(null, form({ boardId: board.id }))).toEqual(expected);
+    expect(await getBoardBySlugs(ctx.db, team.slug, "bugs")).not.toBeNull();
+    expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("refuses a plain Member and deletes nothing", async () => {
+    const { team, board } = await setup("member");
+    expect(
+      await deleteBoardAction(null, form({ boardId: board.id, confirmation: "Bugs" })),
+    ).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+    expect(await getBoardBySlugs(ctx.db, team.slug, "bugs")).not.toBeNull();
+  });
+
+  it("refuses someone signed out", async () => {
+    const { team, board } = await setup("owner");
+    sessionRef.current = null;
+    expect(
+      await deleteBoardAction(null, form({ boardId: board.id, confirmation: "Bugs" })),
+    ).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+    expect(await getBoardBySlugs(ctx.db, team.slug, "bugs")).not.toBeNull();
+  });
+
+  it("will not delete a Board of another Team, even with its id and name", async () => {
+    await setup("owner");
+    const other = await newTeam();
+    const theirs = await createBoard(ctx.db, { teamId: other.id, name: "Theirs", slug: "theirs" });
+    expect(
+      await deleteBoardAction(null, form({ boardId: theirs.id, confirmation: "Theirs" })),
+    ).toEqual({ ok: false, error: "not-found" });
+    expect(await getBoardBySlugs(ctx.db, other.slug, "theirs")).not.toBeNull();
+    expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("handles a missing boardId without error", async () => {
+    await setup("owner");
+    expect(await deleteBoardAction(null, form({ confirmation: "Bugs" }))).toEqual({
       ok: false,
       error: "not-found",
     });
