@@ -1,40 +1,6 @@
-import { expect, type Browser, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-
-const unique = () => Math.random().toString(36).slice(2, 8);
-
-/** Creates a fresh Team (the creator is signed in as its Owner) and opens its dashboard. */
-async function ownerOfNewTeam(page: Page) {
-  const slug = `inv-${unique()}`;
-  await page.goto("/new");
-  await page.getByLabel("Team name").fill(`Team ${slug}`);
-  await page.getByLabel("Team slug").fill(slug);
-  await page.getByLabel("First Board name").fill("Ideas");
-  await page.getByLabel("Your display name").fill("Olga");
-  await page.getByRole("button", { name: "Create Team" }).click();
-  await page.getByRole("link", { name: "Go to dashboard" }).click();
-  await expect(page.getByRole("heading", { name: `Team ${slug}` })).toBeVisible();
-  return slug;
-}
-
-async function generate(page: Page) {
-  await page.getByRole("button", { name: "Generate invite link" }).click();
-  const link = page.getByTestId("invite-link");
-  // The browser adds the origin right after the link first renders; wait for the full URL.
-  await expect(link).toHaveText(/^https?:\/\/.+\/join\/[A-Za-z0-9_-]{43}$/);
-  return (await link.textContent()) ?? "";
-}
-
-/** Opens an invite link in a fresh browser (another person) and joins with a display name. */
-async function join(browser: Browser, baseURL: string, link: string, name: string) {
-  const context = await browser.newContext({ baseURL });
-  const page = await context.newPage();
-  await page.goto(link);
-  await page.getByLabel("Display name").fill(name);
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-  return { context, page };
-}
+import { generateInvite, joinWithInvite, ownerOfNewTeam } from "./team-helpers";
 
 test("an Owner generates an invite link once, lists it, and a person joins with it", async ({
   page,
@@ -45,7 +11,7 @@ test("an Owner generates an invite link once, lists it, and a person joins with 
   await expect(page.getByRole("heading", { name: "Invite links" })).toBeVisible();
   await expect(page.getByText("No invite links yet.")).toBeVisible();
 
-  const link = await generate(page);
+  const link = await generateInvite(page);
   expect(link).toMatch(new RegExp(`^${baseURL}/join/[A-Za-z0-9_-]{43}$`));
   await expect(page.getByText("Copy this link now. It is shown only once.")).toBeVisible();
 
@@ -62,9 +28,9 @@ test("an Owner generates an invite link once, lists it, and a person joins with 
   );
 
   // Multi-use: two different people can join with the same link.
-  const bo = await join(browser, baseURL!, link, "Bo");
+  const bo = await joinWithInvite(browser, baseURL!, link, "Bo");
   await expect(bo.page.getByText("Signed in as Bo (member).")).toBeVisible();
-  const cy = await join(browser, baseURL!, link, "Cy");
+  const cy = await joinWithInvite(browser, baseURL!, link, "Cy");
   await expect(cy.page.getByText("Signed in as Cy (member).")).toBeVisible();
 
   // Members do not get the Owner's section.
@@ -80,8 +46,8 @@ test("revoking stops new joins, keeps Members who joined, and shows as Revoked",
   baseURL,
 }) => {
   await ownerOfNewTeam(page);
-  const link = await generate(page);
-  const early = await join(browser, baseURL!, link, "Early");
+  const link = await generateInvite(page);
+  const early = await joinWithInvite(browser, baseURL!, link, "Early");
 
   await page.getByRole("button", { name: "Revoke" }).click();
   const list = page.getByRole("list", { name: "Invite links" });
@@ -103,8 +69,8 @@ test("revoking stops new joins, keeps Members who joined, and shows as Revoked",
 
 test("each Team sees only its own invite links", async ({ page, browser, baseURL }) => {
   await ownerOfNewTeam(page);
-  await generate(page);
-  await generate(page);
+  await generateInvite(page);
+  await generateInvite(page);
   await expect(page.getByRole("list", { name: "Invite links" }).getByRole("listitem")).toHaveCount(
     2,
   );
@@ -113,7 +79,7 @@ test("each Team sees only its own invite links", async ({ page, browser, baseURL
   const otherPage = await other.newPage();
   await ownerOfNewTeam(otherPage);
   await expect(otherPage.getByText("No invite links yet.")).toBeVisible();
-  await generate(otherPage);
+  await generateInvite(otherPage);
   await expect(
     otherPage.getByRole("list", { name: "Invite links" }).getByRole("listitem"),
   ).toHaveCount(1);

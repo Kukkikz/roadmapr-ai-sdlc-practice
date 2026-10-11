@@ -107,11 +107,14 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - AC: Removal is soft: the Member row is kept with `removed_at` set, so the Member's past Ideas and Comments keep their display name and team label.
 - AC: The removed Member's sessions end immediately, and they can no longer act on the Team.
 - AC: The last Owner cannot be removed.
+- AC: The dashboard has a "Members" section that every signed-in Member sees: each current Member's display name and role. Only Owners see a "Remove" button, for every Member except the last Owner. Removed Members are not listed.
+- AC: An Owner can remove only their own Team's Members. Removing a Member who is already removed, or who is not in the Team, does nothing. A removed Member's Owner link (if they were an Owner) stops working.
 
 **US-3.7** As a Member, I can leave the Team.
 
 - AC: Leaving is the same soft removal as US-3.4, applied to myself, and ends my sessions.
-- AC: The last Owner cannot leave; they delete the Team instead (US-3.8).
+- AC: The last Owner cannot leave; they delete the Team instead (US-3.8). Their dashboard says so instead of offering "Leave Team".
+- AC: Every Member sees a "Leave Team" button on the dashboard. Leaving signs me out on this device and goes to the home page; my other devices' sessions end too.
 
 **US-3.8** As an Owner, I can delete the Team.
 

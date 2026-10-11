@@ -36,6 +36,11 @@ export async function purgeExpiredSessions(db: Db, now: Date = new Date()) {
   await db.delete(sessions).where(lte(sessions.expiresAt, now));
 }
 
+/** Ends every Session of a Member (removal, leaving the Team). */
+export async function deleteSessionsForMember(db: Db, memberId: string) {
+  await db.delete(sessions).where(eq(sessions.memberId, memberId));
+}
+
 export async function deleteSession(db: Db, tokenHash: string) {
   await db.delete(sessions).where(eq(sessions.tokenHash, tokenHash));
 }
