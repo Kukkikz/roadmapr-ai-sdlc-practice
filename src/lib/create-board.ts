@@ -9,10 +9,10 @@ export type CreateBoardResult =
 export const SLUG_TAKEN = "This slug is taken in your Team. Choose another.";
 
 /**
- * Creates a Public Board in a Team (US-4.1). The caller has already checked with `requireRole`
+ * Creates a Board in a Team (US-4.1). The caller has already checked with `requireRole`
  * that the requester is an Owner of `team`, and `team` comes from the Session, never from the
- * request. The slug is unique within the Team (two Teams may share one). A Private board is not
- * offered yet: nobody could open it until the share-link work lands (US-4.2).
+ * request. The slug is unique within the Team (two Teams may share one). The visibility is
+ * Public unless the Owner chose Private.
  */
 export async function createBoardForTeam(
   db: Db,
@@ -23,7 +23,7 @@ export async function createBoardForTeam(
   if (!parsed.success) {
     return { ok: false, error: "invalid", fieldErrors: boardFieldErrors(parsed.error) };
   }
-  const { name, slug, description } = parsed.data;
+  const { name, slug, description, visibility } = parsed.data;
 
   if (await getBoardBySlugs(db, team.slug, slug)) {
     return { ok: false, error: "invalid", fieldErrors: { slug: SLUG_TAKEN } };
@@ -34,7 +34,7 @@ export async function createBoardForTeam(
       name,
       slug,
       description,
-      visibility: "public",
+      visibility,
     });
     return { ok: true, boardSlug: board.slug, boardName: board.name };
   } catch (error) {

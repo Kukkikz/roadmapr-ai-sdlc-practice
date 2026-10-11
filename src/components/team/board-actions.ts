@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { AuthorizationError, requireSessionRole } from "@/lib/authz";
 import { createBoardForTeam } from "@/lib/create-board";
+import { rotateBoardShareLink } from "@/lib/board-share-links";
 import { editBoardForTeam } from "@/lib/edit-board";
 import type { CreateBoardFields } from "@/lib/create-board-input";
 import { formText } from "@/lib/form-data";
@@ -27,6 +28,7 @@ export async function createBoardAction(
       name: formText(formData, "name"),
       slug: formText(formData, "slug"),
       description: formText(formData, "description"),
+      visibility: formText(formData, "visibility"),
     });
     if (!result.ok) return result;
     revalidatePath("/dashboard");
@@ -56,10 +58,40 @@ export async function editBoardAction(
       name: formText(formData, "name"),
       slug: formText(formData, "slug"),
       description: formText(formData, "description"),
+      visibility: formText(formData, "visibility"),
     });
     if (!result.ok) return result;
     revalidatePath("/dashboard");
     return { ok: true, boardName: result.boardName };
+  } catch (error) {
+    if (error instanceof AuthorizationError) return { ok: false, error: "forbidden" };
+    throw error;
+  }
+}
+
+export type RotateShareLinkState =
+  | {
+      ok: true;
+      /** `/join/board/<token>`. Returned once, in this response only; the server keeps its hash. */
+      sharePath: string;
+    }
+  | { ok: false; error: "forbidden" | "not-found" };
+
+/**
+ * An Owner makes or replaces the share link of one of their own Team's Boards (US-4.2).
+ * `boardId` is only honoured together with the Session's Team.
+ */
+export async function rotateShareLinkAction(boardId: string): Promise<RotateShareLinkState> {
+  try {
+    const { team } = await requireSessionRole("owner");
+    const link = await rotateBoardShareLink(
+      getDb(),
+      team.id,
+      typeof boardId === "string" ? boardId : "",
+    );
+    if (!link) return { ok: false, error: "not-found" };
+    revalidatePath("/dashboard");
+    return { ok: true, sharePath: `/join/board/${link.token}` };
   } catch (error) {
     if (error instanceof AuthorizationError) return { ok: false, error: "forbidden" };
     throw error;

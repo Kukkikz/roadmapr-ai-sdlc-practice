@@ -51,16 +51,40 @@ describe("createBoardForTeam (US-4.1)", () => {
     expect(found?.board.description ?? null).toBeNull();
   });
 
-  it("always makes a Public Board, whatever the request says", async () => {
+  it("makes a Public Board unless the Owner chose Private", async () => {
+    const team = await newTeam();
+    await createBoardForTeam(ctx.db, team, { name: "Open", slug: "open-one" });
+    await createBoardForTeam(ctx.db, team, {
+      name: "Closed",
+      slug: "closed-one",
+      visibility: "private",
+    });
+    expect((await getBoardBySlugs(ctx.db, team.slug, "open-one"))?.board.visibility).toBe("public");
+    expect((await getBoardBySlugs(ctx.db, team.slug, "closed-one"))?.board.visibility).toBe(
+      "private",
+    );
+  });
+
+  it("creates the Board in the given Team whatever a teamId field says", async () => {
     const team = await newTeam();
     await createBoardForTeam(ctx.db, team, {
       name: "Sneaky",
       slug: "sneaky",
-      visibility: "private",
       teamId: "someone-else",
     });
     const found = await getBoardBySlugs(ctx.db, team.slug, "sneaky");
-    expect(found?.board).toMatchObject({ visibility: "public", teamId: team.id });
+    expect(found?.board.teamId).toBe(team.id);
+  });
+
+  it("rejects a visibility that is neither Public nor Private", async () => {
+    const team = await newTeam();
+    const result = await createBoardForTeam(ctx.db, team, {
+      name: "Odd",
+      slug: "odd",
+      visibility: "secret",
+    });
+    expect(result).toMatchObject({ ok: false, error: "invalid" });
+    expect(await getBoardBySlugs(ctx.db, team.slug, "odd")).toBeNull();
   });
 
   it("says a taken slug is taken, within the same Team, and creates nothing", async () => {

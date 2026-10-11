@@ -3,6 +3,7 @@ import { cache } from "react";
 import { getBoardBySlugs } from "@/data";
 import { getDb } from "@/db";
 import { canAccessBoard } from "./board-access";
+import { readBoardAccess } from "./board-access-server";
 
 /**
  * Resolves `/{team-slug}/{board-slug}` for the current requester, or null. A Board the
@@ -13,6 +14,7 @@ export const getVisibleBoard = cache(async (teamSlug: string, boardSlug: string)
   // Opts into request-time rendering: this is live database data, not part of the static shell.
   await connection();
   const found = await getBoardBySlugs(getDb(), teamSlug, boardSlug);
-  if (!found || !canAccessBoard(found.board)) return null;
+  if (!found) return null;
+  if (!(await canAccessBoard(getDb(), found.board, await readBoardAccess()))) return null;
   return found;
 });

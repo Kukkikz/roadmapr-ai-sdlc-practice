@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VisibilityField } from "@/components/team/visibility-field";
 import { Textarea } from "@/components/ui/textarea";
+import type { BoardVisibility } from "@/db/schema";
 import { BOARD_LIMITS, type CreateBoardFields } from "@/lib/create-board-input";
 import { SLUG_LIMITS, slugify } from "@/lib/slugs";
 
@@ -47,6 +49,7 @@ function CreateBoardForm({ teamSlug, onDone }: { teamSlug: string; onDone: () =>
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState("");
+  const [visibility, setVisibility] = useState<BoardVisibility>("public");
 
   const [state, action, pending] = useActionState(
     async (previous: CreateBoardState | null, formData: FormData) => {
@@ -62,10 +65,7 @@ function CreateBoardForm({ teamSlug, onDone }: { teamSlug: string; onDone: () =>
   return (
     <form action={action} className="flex flex-col gap-4">
       <DialogTitle>Create a Board</DialogTitle>
-      <DialogDescription>
-        A Board is where people share and vote on Ideas. It is public: anyone with the link can read
-        it and take part.
-      </DialogDescription>
+      <DialogDescription>A Board is where people share and vote on Ideas.</DialogDescription>
 
       {state && !state.ok && state.error === "forbidden" ? (
         <p role="alert" className="rounded-md bg-status-declined px-4 py-3 text-sm text-danger">
@@ -130,6 +130,8 @@ function CreateBoardForm({ teamSlug, onDone }: { teamSlug: string; onDone: () =>
         />
         <FieldError id="board-description-error" message={errors.description} />
       </div>
+
+      <VisibilityField idPrefix="create-visibility" value={visibility} onChange={setVisibility} />
 
       <div className="flex justify-end gap-2">
         <DialogClose asChild>

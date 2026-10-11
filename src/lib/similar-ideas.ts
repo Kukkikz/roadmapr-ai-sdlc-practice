@@ -1,6 +1,7 @@
 import { findSimilarIdeas } from "@/data";
 import type { Db } from "@/data";
 import type { IdeaStatus } from "@/db/schema";
+import type { BoardAccess } from "./board-access";
 import { IDEA_LIMITS } from "./idea-input";
 import { enforceRateLimit } from "./rate-limit";
 import { findBoardForVisitor } from "./visitor-access";
@@ -24,11 +25,11 @@ const MIN_TITLE_LENGTH = 3;
 export async function suggestSimilarIdeas(
   db: Db,
   ip: string,
-  input: { boardId: string; title: string },
+  input: { boardId: string; title: string; access?: BoardAccess },
   now?: Date,
 ): Promise<SuggestResult> {
   const title = input.title.trim().slice(0, IDEA_LIMITS.title);
-  const board = await findBoardForVisitor(db, input.boardId);
+  const board = await findBoardForVisitor(db, input.boardId, input.access);
   if (!board) return { ok: false, error: "not_found" };
   if (title.length < MIN_TITLE_LENGTH) return { ok: true, ideas: [] };
   if (!(await enforceRateLimit(db, "similar", { ip }, now))) {

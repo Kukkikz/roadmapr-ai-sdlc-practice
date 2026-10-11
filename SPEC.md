@@ -72,7 +72,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-2.4** As a Visitor, I can join a Private board with its share link.
 
 - AC: Opening a valid link shows a "Continue" page; continuing stores access to that board in my signed cookie and redirects to the board.
-- AC: A revoked, rotated or unknown token shows a generic "link not valid" page.
+- AC: A revoked, rotated or unknown token shows a generic "link not valid" page. Opening the page never uses the link up; only pressing "Continue" does, and it is rate limited per IP like other link redemptions (G5).
+- AC: The link works for any number of Visitors until it is rotated. Access to several Private boards can be held at once.
 - AC: With access I participate exactly as on a public board (US-2.1 to 2.3).
 
 **Out of scope:** Visitors cannot edit or delete their Ideas, Comments or Votes-after-cookie-loss.
@@ -147,13 +148,16 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - AC: The dashboard lists the Team's Boards (name, whether it is public, and a link) for every signed-in Member. Owners get a "Create board" button, and when the Team has no Boards the list says so and offers it (see US-4.3). A Member sees "Ask an Owner to create one" instead.
 - AC: Create board takes a name, a slug and an optional description. The slug follows G6 and is unique within the Team (a taken slug is a field error; two Teams may use the same Board slug). Only Owners can create Boards, and always for their own Team.
 - AC: An Owner can edit a Board's name, slug and description from the dashboard ("Edit"). The same rules as creation apply; a slug may stay as it is, and changing it moves the Board's URL (the old URL is not found). Only Owners can edit, and only Boards of their own Team; a Board of another Team is answered like a missing one.
-- AC (interim): a new Board is Public and its visibility cannot be changed yet. Choosing Private arrives with the share-link work (US-4.2), because a Private board cannot yet be opened even by its own Team.
+- AC: Creating and editing a Board both offer the visibility, Public (the default) or Private. Switching it changes who can see the Board's content; nothing is deleted.
 
 **US-4.2** As an Owner, I can manage a Private board's share link.
 
 - AC: Generate and rotate the Board share link; rotating invalidates the old one and access previously granted by it.
 - AC: A Visitor's access is stored in their signed cookie as the Board and the share link it came from. It holds only while that link exists and is not revoked, so rotating the link ends previously granted access. Ideas, Votes and Comments the Visitor wrote earlier stay.
-- AC: Switching visibility changes who can see content; nothing is deleted.
+- AC: Switching visibility changes who can see content; nothing is deleted. Share links are left as they are, so a Board switched to Public and back to Private accepts its old link again until it is rotated.
+- AC: A Private board's settings show whether a share link exists and offer "Generate share link" (or "Rotate share link" when one exists). The link is `/join/board/<token>` and is shown once, right after it is made; only its hash is stored. Only Owners can generate or rotate it, and only for Boards of their own Team.
+- AC: Rotating revokes every earlier share link of that Board. Of two simultaneous rotations the later link survives.
+- AC: A signed-in Member of the Board's Team can open its Private board without a link. A Member of another Team cannot.
 
 **US-4.3** As an Owner, I can delete a Board.
 

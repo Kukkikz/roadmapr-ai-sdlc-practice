@@ -60,7 +60,7 @@ A secret, expiring, revocable link that lets someone join a Team as a Member.
 _Avoid_: Invitation (implies an email)
 
 **Board share link**:
-A secret, rotatable link that grants a Visitor access to one Private board.
+A secret, rotatable link that grants a Visitor access to one Private board. Pressing "Continue" stores a grant (the Board and the link) in the Visitor's signed cookie; rotating the link ends every grant it gave.
 
 **Redeem**:
 To open an access link and press "Continue", which uses the link to sign in (Owner link), join the Team (Member invite link) or gain access (Board share link). Opening the link alone never redeems it.

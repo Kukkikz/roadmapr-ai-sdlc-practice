@@ -19,6 +19,7 @@ const board = (id: string, name: string, slug: string, isPublic = true) => ({
   slug,
   description: "",
   isPublic,
+  hasShareLink: false,
 });
 
 describe("BoardsPanel (US-4.1, US-4.3)", () => {

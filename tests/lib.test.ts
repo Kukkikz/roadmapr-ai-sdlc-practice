@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { canAccessBoard } from "@/lib/board-access";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
 import { IDEA_STATUSES } from "@/db/schema";
-
-describe("canAccessBoard", () => {
-  it("allows a public Board and refuses a private one (G3)", () => {
-    expect(canAccessBoard({ visibility: "public" })).toBe(true);
-    expect(canAccessBoard({ visibility: "private" })).toBe(false);
-  });
-});
 
 describe("status helpers", () => {
   it("labels every status", () => {

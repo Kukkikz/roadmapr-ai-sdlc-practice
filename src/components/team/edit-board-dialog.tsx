@@ -13,11 +13,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ShareLinkSection } from "@/components/team/share-link-section";
+import { VisibilityField } from "@/components/team/visibility-field";
 import { Textarea } from "@/components/ui/textarea";
+import type { BoardVisibility } from "@/db/schema";
 import { BOARD_LIMITS, type CreateBoardFields } from "@/lib/create-board-input";
 import { SLUG_LIMITS } from "@/lib/slugs";
 
-export type EditableBoard = { id: string; name: string; slug: string; description: string };
+export type EditableBoard = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  isPublic: boolean;
+  hasShareLink: boolean;
+};
 
 /** An Owner's "Edit" button and dialog for one Board (US-4.1). The form mounts only while open. */
 export function EditBoardDialog({ board, teamSlug }: { board: EditableBoard; teamSlug: string }) {
@@ -31,6 +41,9 @@ export function EditBoardDialog({ board, teamSlug }: { board: EditableBoard; tea
       </DialogTrigger>
       <DialogContent>
         <EditBoardForm board={board} teamSlug={teamSlug} onDone={() => setOpen(false)} />
+        {board.isPublic ? null : (
+          <ShareLinkSection boardId={board.id} hasLink={board.hasShareLink} />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -57,6 +70,9 @@ function EditBoardForm({
   const [name, setName] = useState(board.name);
   const [slug, setSlug] = useState(board.slug);
   const [description, setDescription] = useState(board.description);
+  const [visibility, setVisibility] = useState<BoardVisibility>(
+    board.isPublic ? "public" : "private",
+  );
 
   const [state, action, pending] = useActionState(
     async (previous: EditBoardState | null, formData: FormData) => {
@@ -74,7 +90,8 @@ function EditBoardForm({
       <input type="hidden" name="boardId" value={board.id} />
       <DialogTitle>Edit Board</DialogTitle>
       <DialogDescription>
-        Changing the slug moves the Board to a new address; the old address stops working.
+        Changing the slug moves the Board to a new address; the old address stops working. Changing
+        the visibility deletes nothing.
       </DialogDescription>
 
       {state && !state.ok && state.error !== "invalid" ? (
@@ -138,6 +155,12 @@ function EditBoardForm({
         />
         <FieldError id={`edit-description-error-${board.id}`} message={errors.description} />
       </div>
+
+      <VisibilityField
+        idPrefix={`edit-visibility-${board.id}`}
+        value={visibility}
+        onChange={setVisibility}
+      />
 
       <div className="flex justify-end gap-2">
         <DialogClose asChild>

@@ -7,7 +7,7 @@ import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
 import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
 import { Button } from "@/components/ui/button";
-import { listActiveMembers, listBoardsForTeam } from "@/data";
+import { findActiveBoardShareLink, listActiveMembers, listBoardsForTeam } from "@/data";
 import { getDb } from "@/db";
 import { listInviteLinks } from "@/lib/invite-links";
 import { getSession } from "@/lib/session";
@@ -32,6 +32,16 @@ async function DashboardContent() {
     listActiveMembers(db, session.team.id),
     listBoardsForTeam(db, session.team.id),
   ]);
+  // Whether each Private board has a working share link; only Owners manage them.
+  const sharedBoardIds = new Set<string>();
+  if (session.member.role === "owner") {
+    const links = await Promise.all(
+      boards
+        .filter((b) => b.visibility === "private")
+        .map((b) => findActiveBoardShareLink(db, b.id)),
+    );
+    for (const link of links) if (link?.boardId) sharedBoardIds.add(link.boardId);
+  }
   return (
     <>
       <h1 className="text-[40px] leading-[1.2] text-ink">{session.team.name}</h1>
@@ -45,6 +55,7 @@ async function DashboardContent() {
           slug: board.slug,
           description: board.description ?? "",
           isPublic: board.visibility === "public",
+          hasShareLink: sharedBoardIds.has(board.id),
         }))}
         teamSlug={session.team.slug}
         isOwner={session.member.role === "owner"}

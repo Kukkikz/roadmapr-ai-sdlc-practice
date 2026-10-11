@@ -1,4 +1,6 @@
 import { cookies } from "next/headers";
+import type { BoardAccess } from "./board-access";
+import { readBoardAccess } from "./board-access-server";
 import { newAnonId, signAnonId, verifyAnonCookie } from "./anon-cookie";
 import { getEnv } from "./env";
 import { getSession } from "./session";
@@ -20,6 +22,8 @@ export type Visitor = {
   memberId?: string;
   teamId?: string;
   displayName?: string;
+  /** The Private boards this requester may open (G3); set by `getVisitor`. */
+  access?: BoardAccess;
 };
 
 function toVisitor(anonId: string): Visitor {
@@ -59,7 +63,7 @@ export async function readVisitor(): Promise<Visitor | null> {
  */
 export async function getVisitor(): Promise<Visitor> {
   const existing = await readVisitor();
-  if (existing) return existing;
+  if (existing) return { ...existing, access: await readBoardAccess() };
   const anonId = newAnonId();
   const store = await cookies();
   store.set(ANON_COOKIE, signAnonId(anonId, getEnv().SESSION_SECRET), {
@@ -69,5 +73,5 @@ export async function getVisitor(): Promise<Visitor> {
     path: "/",
     maxAge: MAX_AGE_SECONDS,
   });
-  return toVisitor(anonId);
+  return { ...toVisitor(anonId), access: await readBoardAccess() };
 }

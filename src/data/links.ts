@@ -1,5 +1,5 @@
 import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
-import { accessLinks, members, teams, type LinkKind } from "@/db/schema";
+import { accessLinks, boards, members, teams, type LinkKind } from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
 
@@ -81,4 +81,57 @@ export async function revokeOwnerLinksBefore(
 
 export async function revokeAccessLink(db: Db, linkId: string, now: Date = new Date()) {
   await db.update(accessLinks).set({ revokedAt: now }).where(eq(accessLinks.id, linkId));
+}
+
+/** The Board share link with this token hash, with its Board and Team, or null. */
+export async function findBoardShareLinkByHash(db: Db, tokenHash: string) {
+  const [row] = await db
+    .select({ link: accessLinks, board: boards, team: teams })
+    .from(accessLinks)
+    .innerJoin(boards, eq(accessLinks.boardId, boards.id))
+    .innerJoin(teams, eq(boards.teamId, teams.id))
+    .where(and(eq(accessLinks.tokenHash, tokenHash), eq(accessLinks.kind, "board_share")));
+  return row ?? null;
+}
+
+/** The newest un-revoked share link of a Board, or null. Only its hash is stored, never the token. */
+export async function findActiveBoardShareLink(db: Db, boardId: string) {
+  const [row] = await db
+    .select()
+    .from(accessLinks)
+    .where(
+      and(
+        eq(accessLinks.boardId, boardId),
+        eq(accessLinks.kind, "board_share"),
+        isNull(accessLinks.revokedAt),
+      ),
+    )
+    .orderBy(desc(accessLinks.createdAt), desc(accessLinks.id))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Revokes a Board's un-revoked share links that were made before `keep` (older by creation time,
+ * ties broken by id), in one statement, like `revokeOwnerLinksBefore`: of two simultaneous
+ * rotations the later link always survives.
+ */
+export async function revokeBoardShareLinksBefore(
+  db: Db,
+  input: { boardId: string; keep: { id: string; createdAt: Date }; now?: Date },
+) {
+  await db
+    .update(accessLinks)
+    .set({ revokedAt: input.now ?? new Date() })
+    .where(
+      and(
+        eq(accessLinks.boardId, input.boardId),
+        eq(accessLinks.kind, "board_share"),
+        isNull(accessLinks.revokedAt),
+        or(
+          lt(accessLinks.createdAt, input.keep.createdAt),
+          and(eq(accessLinks.createdAt, input.keep.createdAt), lt(accessLinks.id, input.keep.id)),
+        ),
+      ),
+    );
 }

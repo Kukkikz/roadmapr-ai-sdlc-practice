@@ -22,7 +22,7 @@ export async function castVote(
   ideaId: string,
   now?: Date,
 ): Promise<CastVoteResult> {
-  const found = await findIdeaForVisitor(db, ideaId);
+  const found = await findIdeaForVisitor(db, ideaId, visitor.access);
   if (!found) return { ok: false, error: "not_found" };
   if (!(await enforceRateLimit(db, "vote", { ip }, now))) {
     return { ok: false, error: "rate_limited" };
