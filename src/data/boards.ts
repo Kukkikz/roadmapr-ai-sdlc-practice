@@ -43,3 +43,18 @@ export function listBoardsForTeam(db: Db, teamId: string) {
     .where(eq(boards.teamId, teamId))
     .orderBy(asc(boards.createdAt), asc(boards.id));
 }
+
+/** Updates a Board of the given Team; returns the row, or null when the Team has no such Board. */
+export async function updateBoard(
+  db: Db,
+  teamId: string,
+  boardId: string,
+  fields: { name: string; slug: string; description: string | null },
+) {
+  const [row] = await db
+    .update(boards)
+    .set(fields)
+    .where(and(eq(boards.id, boardId), eq(boards.teamId, teamId)))
+    .returning();
+  return row ?? null;
+}

@@ -1,11 +1,18 @@
 import { CreateBoardDialog } from "@/components/team/create-board-dialog";
+import { EditBoardDialog } from "@/components/team/edit-board-dialog";
 import { Badge } from "@/components/ui/badge";
 
-export type BoardRow = { id: string; name: string; slug: string; isPublic: boolean };
+export type BoardRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  isPublic: boolean;
+};
 
 /**
  * The "Boards" section of the dashboard (US-4.1, US-4.3): every signed-in Member sees the Team's
- * Boards; Owners get "Create board", and a Team with no Boards says so and offers it. Links are
+ * Boards; Owners get "Create board" and "Edit", and a Team with no Boards says so and offers it. Links are
  * plain anchors on purpose (a full page load), so a shown-once link elsewhere on the dashboard
  * cannot come back from the client router's saved state when pressing Back (PLAN.md).
  */
@@ -36,7 +43,10 @@ export function BoardsPanel({
               >
                 {board.name}
               </a>
-              <Badge>{board.isPublic ? "Public" : "Private"}</Badge>
+              <div className="flex items-center gap-3">
+                <Badge>{board.isPublic ? "Public" : "Private"}</Badge>
+                {isOwner ? <EditBoardDialog board={board} teamSlug={teamSlug} /> : null}
+              </div>
             </li>
           ))}
         </ul>

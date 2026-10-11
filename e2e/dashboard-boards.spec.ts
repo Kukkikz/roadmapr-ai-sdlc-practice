@@ -81,3 +81,49 @@ test("going Back from a Board does not bring a shown-once invite link back (US-4
   await expect(page.getByRole("heading", { name: "Boards" })).toBeVisible();
   await expect(page.getByTestId("invite-link")).toHaveCount(0);
 });
+
+test("an Owner edits a Board and its address moves (US-4.1)", async ({ page }) => {
+  const { slug } = await createTeamKeepingOwnerLink(page);
+  await page.getByRole("button", { name: "Edit Ideas" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Board name").fill("Wishes");
+  await dialog.getByLabel("Board slug").fill("wishes");
+  await dialog.getByLabel("Description (optional)").fill("Tell us what you want");
+  await dialog.getByRole("button", { name: "Save changes" }).click();
+
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const boards = page.getByRole("list", { name: "Boards" });
+  await expect(boards.getByRole("link", { name: "Wishes" })).toHaveAttribute(
+    "href",
+    `/${slug}/wishes`,
+  );
+  await boards.getByRole("link", { name: "Wishes" }).click();
+  await expect(page.getByText("Tell us what you want")).toBeVisible();
+  await page.goto(`/${slug}/feedback`);
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+});
+
+test("editing a Board to a taken slug is a field error; Members have no Edit button", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  await createTeamKeepingOwnerLink(page);
+  await page.getByRole("button", { name: "Create board" }).click();
+  const create = page.getByRole("dialog");
+  await create.getByLabel("Board name").fill("Second");
+  await create.getByRole("button", { name: "Create board" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Edit Second" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Board slug").fill("feedback");
+  await dialog.getByRole("button", { name: "Save changes" }).click();
+  await expect(dialog.getByText("This slug is taken in your Team.")).toBeVisible();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+
+  const invite = await generateInvite(page);
+  const bo = await joinWithInvite(browser, baseURL!, invite, "Bo");
+  await expect(bo.page.getByRole("button", { name: /^Edit / })).toHaveCount(0);
+  await bo.context.close();
+});

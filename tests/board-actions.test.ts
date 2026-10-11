@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { createMember, getBoardBySlugs, listBoardsForTeam } from "@/data";
+import { createBoard, createMember, getBoardBySlugs, listBoardsForTeam } from "@/data";
 import { teams } from "@/db/schema";
 import { createTestDb } from "./helpers/db";
 
@@ -11,7 +11,7 @@ vi.mock("next/cache", () => ({ revalidatePath: revalidate }));
 let ctx: Awaited<ReturnType<typeof createTestDb>>;
 vi.mock("@/db", () => ({ getDb: () => ctx.db }));
 
-const { createBoardAction } = await import("@/components/team/board-actions");
+const { createBoardAction, editBoardAction } = await import("@/components/team/board-actions");
 
 type Who = { id: string; teamId: string; role: "owner" | "member" };
 let counter = 0;
@@ -123,5 +123,63 @@ describe("createBoardAction (US-4.1, US-3.6)", () => {
     body.set("slug", "files");
     expect(await createBoardAction(null, body)).toMatchObject({ ok: false, error: "invalid" });
     expect(await count(team.id)).toBe(0);
+  });
+});
+
+describe("editBoardAction (US-4.1, US-3.6)", () => {
+  async function setup(role: "owner" | "member") {
+    const team = await newTeam();
+    const board = await createBoard(ctx.db, { teamId: team.id, name: "Bugs", slug: "bugs" });
+    const who = await join(team.id, role);
+    sessionRef.current = sessionOf(who, team);
+    return { team, board };
+  }
+
+  it("lets an Owner edit a Board of their own Team", async () => {
+    const { team, board } = await setup("owner");
+    const result = await editBoardAction(
+      null,
+      form({ boardId: board.id, name: "Defects", slug: "defects" }),
+    );
+    expect(result).toEqual({ ok: true, boardName: "Defects" });
+    expect((await getBoardBySlugs(ctx.db, team.slug, "defects"))?.board.id).toBe(board.id);
+    expect(revalidate).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("refuses a plain Member and changes nothing", async () => {
+    const { team, board } = await setup("member");
+    expect(
+      await editBoardAction(null, form({ boardId: board.id, name: "Defects", slug: "defects" })),
+    ).toEqual({ ok: false, error: "forbidden" });
+    expect((await getBoardBySlugs(ctx.db, team.slug, "bugs"))?.board.name).toBe("Bugs");
+    expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("refuses someone signed out", async () => {
+    const { board } = await setup("owner");
+    sessionRef.current = null;
+    expect(
+      await editBoardAction(null, form({ boardId: board.id, name: "Defects", slug: "defects" })),
+    ).toEqual({ ok: false, error: "forbidden" });
+  });
+
+  it("will not edit a Board of another Team, even with its id", async () => {
+    const { team } = await setup("owner");
+    const other = await newTeam();
+    const theirs = await createBoard(ctx.db, { teamId: other.id, name: "Theirs", slug: "theirs" });
+    expect(
+      await editBoardAction(null, form({ boardId: theirs.id, name: "Mine now", slug: "mine" })),
+    ).toEqual({ ok: false, error: "not-found" });
+    expect((await getBoardBySlugs(ctx.db, other.slug, "theirs"))?.board.name).toBe("Theirs");
+    expect(await getBoardBySlugs(ctx.db, team.slug, "mine")).toBeNull();
+    expect(revalidate).not.toHaveBeenCalled();
+  });
+
+  it("handles a missing boardId without error", async () => {
+    await setup("owner");
+    expect(await editBoardAction(null, form({ name: "X1", slug: "xx" }))).toEqual({
+      ok: false,
+      error: "not-found",
+    });
   });
 });

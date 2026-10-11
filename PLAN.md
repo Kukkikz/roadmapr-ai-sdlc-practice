@@ -217,7 +217,7 @@ Each cluster ships with its screens and one Playwright spec, so Phase 6 only has
 
 ### Boards
 
-- [ ] Create/edit boards under a team (unique slug per team), with visibility public or private [US-4.1]. Screen: board settings `5575fc79…`
+- [ ] Create/edit boards under a team (unique slug per team), with visibility public or private [US-4.1]. Screen: board settings `5575fc79…` (create was PR I; edit name, slug and description is done: `editBoardForTeam` in `src/lib/edit-board.ts`, an "Edit" dialog per Board on the dashboard, scoped to the Session's Team; the visibility choice waits for the private-board tasks below, and the full board-settings screen with them)
 - [ ] Private boards: owner generates and rotates a board share link; visitors without it get a 404 [US-4.2, G3]
 - [ ] `canAccessBoard` private-board check: a valid Member session for the Team, or a signed cookie holding `{boardId, linkId}` whose `access_links` row still exists and is not revoked, so rotating the link ends previously granted access [US-4.2, G3]
 - [ ] Visitor joins a Private board with its share link ("Continue" page, then cookie, then redirect); revoked, rotated or unknown tokens show "link not valid" [US-2.4, G4]

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { AuthorizationError, requireSessionRole } from "@/lib/authz";
 import { createBoardForTeam } from "@/lib/create-board";
+import { editBoardForTeam } from "@/lib/edit-board";
 import type { CreateBoardFields } from "@/lib/create-board-input";
 import { formText } from "@/lib/form-data";
 
@@ -23,6 +24,35 @@ export async function createBoardAction(
   try {
     const { team } = await requireSessionRole("owner");
     const result = await createBoardForTeam(getDb(), team, {
+      name: formText(formData, "name"),
+      slug: formText(formData, "slug"),
+      description: formText(formData, "description"),
+    });
+    if (!result.ok) return result;
+    revalidatePath("/dashboard");
+    return { ok: true, boardName: result.boardName };
+  } catch (error) {
+    if (error instanceof AuthorizationError) return { ok: false, error: "forbidden" };
+    throw error;
+  }
+}
+
+export type EditBoardState =
+  | { ok: true; boardName: string }
+  | { ok: false; error: "invalid"; fieldErrors: Partial<Record<CreateBoardFields, string>> }
+  | { ok: false; error: "forbidden" | "not-found" };
+
+/**
+ * An Owner edits a Board of their own Team (US-4.1). `boardId` is a form field, so it is only
+ * ever used together with the Session's Team: another Team's Board answers "not-found".
+ */
+export async function editBoardAction(
+  _previous: EditBoardState | null,
+  formData: FormData,
+): Promise<EditBoardState> {
+  try {
+    const { team } = await requireSessionRole("owner");
+    const result = await editBoardForTeam(getDb(), team, formText(formData, "boardId") ?? "", {
       name: formText(formData, "name"),
       slug: formText(formData, "slug"),
       description: formText(formData, "description"),
