@@ -45,7 +45,7 @@ export async function submitIdea(
   }
   const { boardId, title, description, authorName } = parsed.data;
 
-  const board = await findBoardForVisitor(db, boardId);
+  const board = await findBoardForVisitor(db, boardId, visitor.access);
   if (!board) return { ok: false, error: "not_found" };
 
   if (!(await enforceRateLimit(db, "submit", { anonId: visitor.anonId, ip }, now))) {

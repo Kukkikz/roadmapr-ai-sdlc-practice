@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // The same for a Board share link (US-2.4), which has one more path segment.
+        source: "/join/board/:token",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "no-store" },
+        ],
+      },
+      {
         // Pages that show a secret link once ("save your Owner link", new invite links): not
         // cached, so Back after leaving fetches a fresh page instead of restoring the link.
         source: "/:page(new|dashboard)",

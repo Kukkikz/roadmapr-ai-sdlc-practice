@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createBoard, getBoardBySlugs } from "@/data";
+import { createBoard, createIdea, getBoardBySlugs, getIdea } from "@/data";
 import { teams } from "@/db/schema";
 import { editBoardForTeam } from "@/lib/edit-board";
 import { createTestDb } from "./helpers/db";
@@ -28,6 +28,7 @@ describe("editBoardForTeam (US-4.1)", () => {
     const team = await newTeam();
     const board = await newBoard(team.id, "old-slug");
     const result = await editBoardForTeam(ctx.db, team, board.id, {
+      visibility: "public",
       name: "  New name ",
       slug: "new-slug",
       description: " New text ",
@@ -46,6 +47,7 @@ describe("editBoardForTeam (US-4.1)", () => {
     const team = await newTeam();
     const board = await newBoard(team.id, "same");
     const result = await editBoardForTeam(ctx.db, team, board.id, {
+      visibility: "public",
       name: "Renamed",
       slug: "same",
       description: "  ",
@@ -56,24 +58,54 @@ describe("editBoardForTeam (US-4.1)", () => {
     expect(found?.board.description ?? null).toBeNull();
   });
 
-  it("never changes the visibility, whatever the request says", async () => {
+  it("switches the visibility both ways and keeps the Ideas", async () => {
     const team = await newTeam();
-    const board = await newBoard(team.id, "stay-public");
+    const board = await newBoard(team.id, "switchy");
+    const idea = await createIdea(ctx.db, {
+      boardId: board.id,
+      title: "Keep me",
+      actorId: "anon:a",
+    });
+    const make = (visibility: string) =>
+      editBoardForTeam(ctx.db, team, board.id, { name: "Switchy", slug: "switchy", visibility });
+    expect(await make("private")).toMatchObject({ ok: true });
+    expect((await getBoardBySlugs(ctx.db, team.slug, "switchy"))?.board.visibility).toBe("private");
+    expect(await make("public")).toMatchObject({ ok: true });
+    expect((await getBoardBySlugs(ctx.db, team.slug, "switchy"))?.board.visibility).toBe("public");
+    expect((await getIdea(ctx.db, idea.id))?.title).toBe("Keep me");
+  });
+
+  it("refuses a request without a visibility instead of publishing the Board, and an unknown one", async () => {
+    const team = await newTeam();
+    const board = await newBoard(team.id, "plain");
     await editBoardForTeam(ctx.db, team, board.id, {
-      name: "x1",
-      slug: "stay-public",
+      name: "N",
+      slug: "plain",
       visibility: "private",
     });
-    expect((await getBoardBySlugs(ctx.db, team.slug, "stay-public"))?.board.visibility).toBe(
-      "public",
-    );
+    const missing = await editBoardForTeam(ctx.db, team, board.id, { name: "N2", slug: "plain" });
+    expect(missing).toMatchObject({ ok: false, error: "invalid" });
+    expect((await getBoardBySlugs(ctx.db, team.slug, "plain"))?.board).toMatchObject({
+      name: "N",
+      visibility: "private",
+    });
+    const bad = await editBoardForTeam(ctx.db, team, board.id, {
+      name: "N1",
+      slug: "plain",
+      visibility: "secret",
+    });
+    expect(bad).toMatchObject({ ok: false, error: "invalid" });
   });
 
   it("says a slug used by another Board of the Team is taken, and changes nothing", async () => {
     const team = await newTeam();
     await newBoard(team.id, "taken");
     const board = await newBoard(team.id, "mine");
-    const result = await editBoardForTeam(ctx.db, team, board.id, { name: "N", slug: "taken" });
+    const result = await editBoardForTeam(ctx.db, team, board.id, {
+      visibility: "public",
+      name: "N",
+      slug: "taken",
+    });
     expect(result).toMatchObject({ ok: false, error: "invalid" });
     if (result.ok || result.error !== "invalid") throw new Error("expected invalid");
     expect(result.fieldErrors.slug).toMatch(/taken/);
@@ -85,7 +117,11 @@ describe("editBoardForTeam (US-4.1)", () => {
     const b = await newTeam();
     await newBoard(a.id, "shared");
     const board = await newBoard(b.id, "other");
-    const result = await editBoardForTeam(ctx.db, b, board.id, { name: "N", slug: "shared" });
+    const result = await editBoardForTeam(ctx.db, b, board.id, {
+      visibility: "public",
+      name: "N",
+      slug: "shared",
+    });
     expect(result).toMatchObject({ ok: true });
   });
 
@@ -94,6 +130,7 @@ describe("editBoardForTeam (US-4.1)", () => {
     const theirs = await newTeam();
     const board = await newBoard(theirs.id, "theirs");
     const result = await editBoardForTeam(ctx.db, mine, board.id, {
+      visibility: "public",
       name: "Hacked",
       slug: "hacked",
     });
@@ -103,7 +140,13 @@ describe("editBoardForTeam (US-4.1)", () => {
 
   it("answers not-found for an unknown Board id", async () => {
     const team = await newTeam();
-    expect(await editBoardForTeam(ctx.db, team, "nope", { name: "N", slug: "fine" })).toEqual({
+    expect(
+      await editBoardForTeam(ctx.db, team, "nope", {
+        visibility: "public",
+        name: "N",
+        slug: "fine",
+      }),
+    ).toEqual({
       ok: false,
       error: "not-found",
     });
@@ -120,7 +163,10 @@ describe("editBoardForTeam (US-4.1)", () => {
   ])("rejects %s and changes nothing", async (_label, input, field) => {
     const team = await newTeam();
     const board = await newBoard(team.id, "untouched");
-    const result = await editBoardForTeam(ctx.db, team, board.id, input);
+    const result = await editBoardForTeam(ctx.db, team, board.id, {
+      visibility: "public",
+      ...input,
+    });
     expect(result).toMatchObject({ ok: false, error: "invalid" });
     if (result.ok || result.error !== "invalid") throw new Error("expected invalid");
     expect(result.fieldErrors[field as keyof typeof result.fieldErrors]).toBeTruthy();

@@ -217,12 +217,12 @@ Each cluster ships with its screens and one Playwright spec, so Phase 6 only has
 
 ### Boards
 
-- [ ] Create/edit boards under a team (unique slug per team), with visibility public or private [US-4.1]. Screen: board settings `5575fc79…` (create was PR I; edit name, slug and description is done: `editBoardForTeam` in `src/lib/edit-board.ts`, an "Edit" dialog per Board on the dashboard, scoped to the Session's Team; the visibility choice waits for the private-board tasks below, and the full board-settings screen with them)
-- [ ] Private boards: owner generates and rotates a board share link; visitors without it get a 404 [US-4.2, G3]
-- [ ] `canAccessBoard` private-board check: a valid Member session for the Team, or a signed cookie holding `{boardId, linkId}` whose `access_links` row still exists and is not revoked, so rotating the link ends previously granted access [US-4.2, G3]
-- [ ] Visitor joins a Private board with its share link ("Continue" page, then cookie, then redirect); revoked, rotated or unknown tokens show "link not valid" [US-2.4, G4]
+- [x] Create/edit boards under a team (unique slug per team), with visibility public or private [US-4.1]. Screen: board settings `5575fc79…` (create PR I, edit PR J; the visibility choice is a Public/Private radio in both the Create and Edit dialogs; the edit dialog stands in for the full board-settings screen)
+- [x] Private boards: owner generates and rotates a board share link; visitors without it get a 404 [US-4.2, G3] (`rotateBoardShareLink` in `src/lib/board-share-links.ts`; "Share link" section of the Edit dialog; the link `/join/board/<token>` is shown once and only its hash is stored; the new link is made first, then earlier ones are revoked, so the later of two simultaneous rotations survives)
+- [x] `canAccessBoard` private-board check: a valid Member session for the Team, or a signed cookie holding `{boardId, linkId}` whose `access_links` row still exists and is not revoked, so rotating the link ends previously granted access [US-4.2, G3] (`canAccessBoard(db, board, access)` is async and takes the Session's Team plus the grants from the signed `roadmapr_boards` cookie; `Visitor.access` carries it into the vote, comment, idea and similar-idea actions; `getVisibleBoard` reads it for pages)
+- [x] Visitor joins a Private board with its share link ("Continue" page, then cookie, then redirect); revoked, rotated or unknown tokens show "link not valid" [US-2.4, G4] (`/join/board/<token>`; `joinBoardWithLink` is rate limited like other redeems and does not use the link up; `next.config.ts` sends `no-referrer` and `no-store` for it)
 - [ ] Owner deletes a board: type the board name to confirm, permanent cascade, URL returns not found; a team may have zero boards [US-4.3, G8]. Screen: dialog `9a4c24a6…`
-- [ ] Public URL structure: `/{team-slug}/{board-slug}` (built in Phase 3a; Phase 4 adds the private-board case) [US-4.1]
+- [x] Public URL structure: `/{team-slug}/{board-slug}` (built in Phase 3a; Phase 4 adds the private-board case) [US-4.1] (nothing new needed: `getVisibleBoard` already resolves Private boards for those who may open them)
 
 ---
 

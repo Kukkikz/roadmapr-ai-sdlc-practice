@@ -8,6 +8,7 @@ export type BoardRow = {
   slug: string;
   description: string;
   isPublic: boolean;
+  hasShareLink: boolean;
 };
 
 /**

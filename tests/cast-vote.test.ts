@@ -2,9 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   addVote,
   countVotes,
+  createAccessLink,
   createBoard,
   createIdea,
   hasVoted,
+  revokeAccessLink,
   setIdeaHidden,
   setIdeaStatus,
   votedIdeaIds,
@@ -12,6 +14,7 @@ import {
 import type { IdeaStatus } from "@/db/schema";
 import { teams } from "@/db/schema";
 import { castVote } from "@/lib/cast-vote";
+import { generateToken, hashToken } from "@/lib/link-token";
 import type { Visitor } from "@/lib/visitor";
 import { createTestDb } from "./helpers/db";
 
@@ -174,5 +177,36 @@ describe("votedIdeaIds", () => {
 
   it("returns an empty set for no Ideas without querying", async () => {
     expect((await votedIdeaIds(ctx.db, "anon:x", [])).size).toBe(0);
+  });
+});
+
+describe("castVote on a Private board (G3, US-4.2)", () => {
+  it("is not found without access and works with a Member's Team or a live share link", async () => {
+    const idea = await newIdea(privateBoard);
+    expect(await castVote(ctx.db, visitor(), "192.0.2.50", idea.id, NOW)).toEqual({
+      ok: false,
+      error: "not_found",
+    });
+
+    const member = { ...visitor(), access: { teamId: "t1", grants: [] } };
+    expect(await castVote(ctx.db, member, "192.0.2.51", idea.id, NOW)).toMatchObject({ ok: true });
+
+    const link = await createAccessLink(ctx.db, {
+      teamId: "t1",
+      boardId: privateBoard,
+      kind: "board_share",
+      tokenHash: hashToken(generateToken()),
+    });
+    const guest = {
+      ...visitor(),
+      access: { grants: [{ boardId: privateBoard, linkId: link.id }] },
+    };
+    expect(await castVote(ctx.db, guest, "192.0.2.52", idea.id, NOW)).toMatchObject({ ok: true });
+
+    await revokeAccessLink(ctx.db, link.id);
+    expect(await castVote(ctx.db, guest, "192.0.2.53", idea.id, NOW)).toEqual({
+      ok: false,
+      error: "not_found",
+    });
   });
 });

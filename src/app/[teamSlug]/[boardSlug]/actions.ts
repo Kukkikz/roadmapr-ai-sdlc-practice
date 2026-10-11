@@ -7,6 +7,7 @@ import { formText, honeypotValue } from "@/lib/form-data";
 import { submitIdea, type SubmitIdeaResult } from "@/lib/submit-idea";
 import { submitComment, type SubmitCommentResult } from "@/lib/submit-comment";
 import { suggestSimilarIdeas, type SuggestResult } from "@/lib/similar-ideas";
+import { readBoardAccess } from "@/lib/board-access-server";
 import { getVisitor } from "@/lib/visitor";
 
 /** Thin wrapper: reads the request, delegates to `submitIdea`. Reachable by direct POST, so all checks live there. */
@@ -31,7 +32,11 @@ export async function suggestSimilarIdeasAction(
   if (typeof boardId !== "string" || typeof title !== "string") {
     return { ok: false, error: "not_found" };
   }
-  return suggestSimilarIdeas(getDb(), await getClientIp(), { boardId, title });
+  return suggestSimilarIdeas(getDb(), await getClientIp(), {
+    boardId,
+    title,
+    access: await readBoardAccess(),
+  });
 }
 
 export async function toggleVoteAction(ideaId: string): Promise<CastVoteResult> {

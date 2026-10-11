@@ -5,12 +5,15 @@ import { newAnonId, signAnonId } from "@/lib/anon-cookie";
 import { getEnv } from "@/lib/env";
 import { rateLimitKey } from "@/lib/rate-limit";
 import { findBoardForVisitor, findIdeaForVisitor } from "@/lib/visitor-access";
-import { ANON_COOKIE, getVisitor, readVisitor } from "@/lib/visitor";
+import { ANON_COOKIE, getVisitor, readVisitor, type Visitor } from "@/lib/visitor";
 import { createTestDb } from "./helpers/db";
 
 // The signed-in Member (or null) that `getSession` reports.
 const sessionRef = vi.hoisted(() => ({
-  current: null as null | { member: { id: string; teamId: string; displayName: string } },
+  current: null as null | {
+    member: { id: string; teamId: string; displayName: string };
+    team: { id: string };
+  },
 }));
 vi.mock("@/lib/session", () => ({ getSession: async () => sessionRef.current }));
 
@@ -26,6 +29,13 @@ vi.mock("next/headers", () => ({
     },
   }),
 }));
+
+// The identity part of a Visitor, without the Private-board access `getVisitor` adds.
+const bare = (visitor: Visitor | null) => {
+  const { access, ...identity } = visitor!;
+  void access;
+  return identity;
+};
 
 beforeEach(() => {
   sessionRef.current = null;
@@ -65,14 +75,14 @@ describe("getVisitor / readVisitor", () => {
     jar.set(ANON_COOKIE, stranger);
     const visitor = await getVisitor();
     expect(jar.get(ANON_COOKIE)).not.toBe(stranger);
-    expect(await readVisitor()).toEqual(visitor);
+    expect(bare(await readVisitor())).toEqual(bare(visitor));
   });
 
   it("reuses the same Actor on later calls without setting another cookie", async () => {
     const first = await getVisitor();
     setSpy.mockClear();
-    expect(await getVisitor()).toEqual(first);
-    expect(await readVisitor()).toEqual(first);
+    expect(bare(await getVisitor())).toEqual(bare(first));
+    expect(bare(await readVisitor())).toEqual(bare(first));
     expect(setSpy).not.toHaveBeenCalled();
   });
 
@@ -81,14 +91,17 @@ describe("getVisitor / readVisitor", () => {
     jar.set(ANON_COOKIE, `${victim.anonId}.forged-signature`);
     const attacker = await getVisitor();
     expect(attacker.anonId).not.toBe(victim.anonId);
-    expect(await readVisitor()).toEqual(attacker);
+    expect(bare(await readVisitor())).toEqual(bare(attacker));
   });
 });
 
 describe("a signed-in Member (G1)", () => {
   it("acts as member:<id>, never as their anonymous cookie", async () => {
     const anon = await getVisitor();
-    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
+    sessionRef.current = {
+      member: { id: "m1", teamId: "t1", displayName: "Olga" },
+      team: { id: "t1" },
+    };
     const expected = {
       anonId: "member:m1",
       actorId: "member:m1",
@@ -96,13 +109,16 @@ describe("a signed-in Member (G1)", () => {
       teamId: "t1",
       displayName: "Olga",
     };
-    expect(await readVisitor()).toEqual(expected);
-    expect(await getVisitor()).toEqual(expected);
+    expect(await readVisitor()).toMatchObject(expected);
+    expect(await getVisitor()).toMatchObject(expected);
     expect((await getVisitor()).actorId).not.toBe(anon.actorId);
   });
 
   it("is not issued an anonymous cookie", async () => {
-    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
+    sessionRef.current = {
+      member: { id: "m1", teamId: "t1", displayName: "Olga" },
+      team: { id: "t1" },
+    };
     await getVisitor();
     expect(setSpy).not.toHaveBeenCalled();
     expect(jar.has(ANON_COOKIE)).toBe(false);
@@ -110,16 +126,25 @@ describe("a signed-in Member (G1)", () => {
 
   it("goes back to the anonymous identity after signing out", async () => {
     const anon = await getVisitor();
-    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
+    sessionRef.current = {
+      member: { id: "m1", teamId: "t1", displayName: "Olga" },
+      team: { id: "t1" },
+    };
     expect((await readVisitor())?.actorId).toBe("member:m1");
     sessionRef.current = null;
-    expect(await readVisitor()).toEqual(anon);
+    expect(bare(await readVisitor())).toEqual(bare(anon));
   });
 
   it("gets a rate-limit identity of their own, never a Visitor's", async () => {
-    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
+    sessionRef.current = {
+      member: { id: "m1", teamId: "t1", displayName: "Olga" },
+      team: { id: "t1" },
+    };
     const member = await getVisitor();
-    sessionRef.current = { member: { id: "m2", teamId: "t1", displayName: "Bo" } };
+    sessionRef.current = {
+      member: { id: "m2", teamId: "t1", displayName: "Bo" },
+      team: { id: "t1" },
+    };
     const other = await getVisitor();
     const anon = await (async () => {
       sessionRef.current = null;
@@ -178,5 +203,25 @@ describe("findBoardForVisitor / findIdeaForVisitor (G2, G3)", () => {
     const created = await idea(privateBoard);
     expect(await findIdeaForVisitor(ctx.db, created.id)).toBeNull();
     expect(await findIdeaForVisitor(ctx.db, "missing")).toBeNull();
+  });
+});
+
+describe("getVisitor carries the requester's Private-board access (G3)", () => {
+  it("holds the Session's Team and the grants in the signed cookie", async () => {
+    const { signBoardGrants } = await import("@/lib/board-grants");
+    const { BOARD_ACCESS_COOKIE } = await import("@/lib/board-access-server");
+    sessionRef.current = {
+      member: { id: "m1", teamId: "t1", displayName: "Olga" },
+      team: { id: "t1" },
+    };
+    const grants = [{ boardId: "b1", linkId: "l1" }];
+    jar.set(BOARD_ACCESS_COOKIE, signBoardGrants(grants, getEnv().SESSION_SECRET));
+    expect((await getVisitor()).access).toEqual({ teamId: "t1", grants });
+  });
+
+  it("ignores a forged grants cookie", async () => {
+    const { BOARD_ACCESS_COOKIE } = await import("@/lib/board-access-server");
+    jar.set(BOARD_ACCESS_COOKIE, "eyJ4IjoxfQ.forged");
+    expect((await getVisitor()).access).toEqual({ teamId: undefined, grants: [] });
   });
 });

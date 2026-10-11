@@ -42,7 +42,7 @@ export async function submitComment(
   }
   const { ideaId, body, authorName } = parsed.data;
 
-  const found = await findIdeaForVisitor(db, ideaId);
+  const found = await findIdeaForVisitor(db, ideaId, visitor.access);
   if (!found) return { ok: false, error: "not_found" };
 
   if (!(await enforceRateLimit(db, "comment", { anonId: visitor.anonId, ip }, now))) {

@@ -1,7 +1,7 @@
 import { getBoardBySlugs, updateBoard } from "@/data";
 import type { Db } from "@/data";
 import { SLUG_TAKEN } from "./create-board";
-import { boardFieldErrors, createBoardSchema, type BoardFieldErrors } from "./create-board-input";
+import { boardFieldErrors, editBoardSchema, type BoardFieldErrors } from "./create-board-input";
 
 export type EditBoardResult =
   | { ok: true; boardSlug: string; boardName: string }
@@ -9,10 +9,10 @@ export type EditBoardResult =
   | { ok: false; error: "not-found" };
 
 /**
- * Edits a Board's name, slug and description (US-4.1). The caller has already checked with
- * `requireRole` that the requester is an Owner of `team`. `boardId` comes from the request, so
- * the update is scoped to the Team: a Board of another Team answers like a missing one. The
- * visibility is not editable yet (US-4.2).
+ * Edits a Board's name, slug, description and visibility (US-4.1). The caller has already
+ * checked with `requireRole` that the requester is an Owner of `team`. `boardId` comes from the
+ * request, so the update is scoped to the Team: a Board of another Team answers like a missing
+ * one. Switching visibility deletes nothing and leaves the share links as they are (US-4.2).
  */
 export async function editBoardForTeam(
   db: Db,
@@ -20,11 +20,11 @@ export async function editBoardForTeam(
   boardId: string,
   input: Record<string, unknown>,
 ): Promise<EditBoardResult> {
-  const parsed = createBoardSchema.safeParse(input);
+  const parsed = editBoardSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: "invalid", fieldErrors: boardFieldErrors(parsed.error) };
   }
-  const { name, slug, description } = parsed.data;
+  const { name, slug, description, visibility } = parsed.data;
 
   const taken = async () => {
     const other = await getBoardBySlugs(db, team.slug, slug);
@@ -37,6 +37,7 @@ export async function editBoardForTeam(
       name,
       slug,
       description: description ?? null,
+      visibility,
     });
     if (!board) return { ok: false, error: "not-found" };
     return { ok: true, boardSlug: board.slug, boardName: board.name };

@@ -49,7 +49,12 @@ export async function updateBoard(
   db: Db,
   teamId: string,
   boardId: string,
-  fields: { name: string; slug: string; description: string | null },
+  fields: {
+    name: string;
+    slug: string;
+    description: string | null;
+    visibility: BoardVisibility;
+  },
 ) {
   const [row] = await db
     .update(boards)

@@ -1,5 +1,11 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 
+/**
+ * Waits until the page's scripts have loaded, so a click on a dialog button is not lost to a
+ * page that is still hydrating (the dev server compiles client code on first use).
+ */
+export const hydrated = (page: Page) => page.waitForLoadState("networkidle");
+
 export const unique = () => Math.random().toString(36).slice(2, 8);
 
 /** Creates a fresh Team (the creator is signed in as its Owner) and opens its dashboard. */
@@ -13,6 +19,7 @@ export async function ownerOfNewTeam(page: Page, displayName = "Olga") {
   await page.getByRole("button", { name: "Create Team" }).click();
   await page.getByRole("link", { name: "Go to dashboard" }).click();
   await expect(page.getByRole("heading", { name: `Team ${slug}` })).toBeVisible();
+  await hydrated(page);
   return slug;
 }
 
@@ -55,5 +62,6 @@ export async function createTeamKeepingOwnerLink(page: Page, displayName = "Olga
   const ownerLink = (await link.textContent()) ?? "";
   await page.getByRole("link", { name: "Go to dashboard" }).click();
   await expect(page.getByRole("heading", { name: `Team ${slug}` })).toBeVisible();
+  await hydrated(page);
   return { slug, ownerLink };
 }
