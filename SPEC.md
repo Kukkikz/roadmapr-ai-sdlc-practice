@@ -172,6 +172,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-5.1** As a Member, I can change an Idea's status.
 
 - AC: From the Idea page or dashboard; any status to any other.
+- AC: Only a Member of the Board's own Team can; a Visitor, someone signed out or a Member of another Team gets no control, and a request for an Idea on another Team's Board is answered like a missing one. The status is validated on the server.
+- AC: Choosing the status an Idea already has changes nothing and records nothing.
 - AC: Each change creates an `idea_status_events` row (who, when, from, to).
 
 **US-5.2** As a Member, I can manage tags.

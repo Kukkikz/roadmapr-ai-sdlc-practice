@@ -232,9 +232,9 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 ### Status Management
 
-- [ ] Idea statuses: `open` (default for new ideas), `planned`, `in_progress`, `shipped`, `declined` (visible on board, not on roadmap); any transition allowed [G7]
-- [ ] Owner/members can change status from idea detail and dashboard [US-5.1]
-- [ ] Record status change history (who, when, from → to) [US-5.1]
+- [x] Idea statuses: `open` (default for new ideas), `planned`, `in_progress`, `shipped`, `declined` (visible on board, not on roadmap); any transition allowed [G7]
+- [~] Owner/members can change status from idea detail and dashboard [US-5.1] (idea detail done: `changeIdeaStatus`, `changeStatusAction`, `IdeaStatusForm`; the dashboard control ships with the moderation queue)
+- [x] Record status change history (who, when, from → to) [US-5.1] (written by `setIdeaStatus`; showing the history is not built)
 
 ### Tags
 

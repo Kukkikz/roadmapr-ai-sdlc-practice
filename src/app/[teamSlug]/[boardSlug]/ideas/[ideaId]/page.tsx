@@ -2,12 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommentForm } from "@/components/board/comment-form";
 import { VoteButton } from "@/components/board/vote-button";
+import { IdeaStatusForm } from "@/components/team/idea-status-form";
 import { Badge } from "@/components/ui/badge";
 import { getIdea, hasVoted, listComments } from "@/data";
 import { getDb } from "@/db";
 import { getVisibleBoard } from "@/lib/board-view";
 import { formatDate } from "@/lib/format";
 import { postingAsFor } from "@/lib/posting-as";
+import { getSession } from "@/lib/session";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
 import { readVisitor } from "@/lib/visitor";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,8 @@ export default async function IdeaPage({
   if (!idea) notFound();
   const comments = await listComments(db, idea.id);
   const visitor = await readVisitor();
+  // Only a Member of this Board's own Team gets the status control (US-5.1).
+  const isTeamMember = (await getSession())?.team.id === team.id;
   const voted = visitor ? await hasVoted(db, idea.id, visitor.actorId) : false;
 
   return (
@@ -55,6 +59,8 @@ export default async function IdeaPage({
           </p>
         </div>
       </header>
+
+      {isTeamMember ? <IdeaStatusForm ideaId={idea.id} status={idea.status} /> : null}
 
       {idea.description ? (
         <p className="text-base whitespace-pre-wrap text-body">{idea.description}</p>
