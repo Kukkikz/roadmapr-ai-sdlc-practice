@@ -43,6 +43,7 @@ async function DashboardContent() {
           id: board.id,
           name: board.name,
           slug: board.slug,
+          description: board.description ?? "",
           isPublic: board.visibility === "public",
         }))}
         teamSlug={session.team.slug}

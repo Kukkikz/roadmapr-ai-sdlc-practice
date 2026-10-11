@@ -24,3 +24,15 @@ export const createBoardSchema = z.object({
 });
 
 export type CreateBoardFields = keyof z.infer<typeof createBoardSchema>;
+
+export type BoardFieldErrors = Partial<Record<CreateBoardFields, string>>;
+
+/** The first message per field of a failed parse. */
+export function boardFieldErrors(error: z.ZodError): BoardFieldErrors {
+  const fieldErrors: BoardFieldErrors = {};
+  for (const issue of error.issues) {
+    const field = issue.path[0] as CreateBoardFields;
+    fieldErrors[field] ??= issue.message;
+  }
+  return fieldErrors;
+}

@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 // The Create board dialog imports a Server Action; its body is not needed to render the panel.
-vi.mock("@/components/team/board-actions", () => ({ createBoardAction: vi.fn() }));
+vi.mock("@/components/team/board-actions", () => ({
+  createBoardAction: vi.fn(),
+  editBoardAction: vi.fn(),
+}));
 
 const { BoardsPanel } = await import("@/components/team/boards-panel");
 
@@ -14,6 +17,7 @@ const board = (id: string, name: string, slug: string, isPublic = true) => ({
   id,
   name,
   slug,
+  description: "",
   isPublic,
 });
 

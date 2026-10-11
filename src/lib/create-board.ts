@@ -1,12 +1,12 @@
 import { createBoard, getBoardBySlugs } from "@/data";
 import type { Db } from "@/data";
-import { createBoardSchema, type CreateBoardFields } from "./create-board-input";
+import { boardFieldErrors, createBoardSchema, type BoardFieldErrors } from "./create-board-input";
 
 export type CreateBoardResult =
   | { ok: true; boardSlug: string; boardName: string }
-  | { ok: false; error: "invalid"; fieldErrors: Partial<Record<CreateBoardFields, string>> };
+  | { ok: false; error: "invalid"; fieldErrors: BoardFieldErrors };
 
-const SLUG_TAKEN = "This slug is taken in your Team. Choose another.";
+export const SLUG_TAKEN = "This slug is taken in your Team. Choose another.";
 
 /**
  * Creates a Public Board in a Team (US-4.1). The caller has already checked with `requireRole`
@@ -21,12 +21,7 @@ export async function createBoardForTeam(
 ): Promise<CreateBoardResult> {
   const parsed = createBoardSchema.safeParse(input);
   if (!parsed.success) {
-    const fieldErrors: Partial<Record<CreateBoardFields, string>> = {};
-    for (const issue of parsed.error.issues) {
-      const field = issue.path[0] as CreateBoardFields;
-      fieldErrors[field] ??= issue.message;
-    }
-    return { ok: false, error: "invalid", fieldErrors };
+    return { ok: false, error: "invalid", fieldErrors: boardFieldErrors(parsed.error) };
   }
   const { name, slug, description } = parsed.data;
 
