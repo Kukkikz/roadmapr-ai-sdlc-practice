@@ -1,6 +1,7 @@
 import { createIdea } from "@/data";
 import type { Db } from "@/data";
 import { submitIdeaSchema, type SubmitIdeaFields } from "./idea-input";
+import { authorNameFor } from "./author";
 import { enforceRateLimit } from "./rate-limit";
 import type { Visitor } from "./visitor";
 import { findBoardForVisitor } from "./visitor-access";
@@ -56,7 +57,7 @@ export async function submitIdea(
     title,
     description,
     actorId: visitor.actorId,
-    authorName: authorName ?? null,
+    authorName: authorNameFor(visitor, authorName),
   });
   return { ok: true, ideaId: idea.id };
 }

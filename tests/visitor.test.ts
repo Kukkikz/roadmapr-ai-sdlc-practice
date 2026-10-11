@@ -9,7 +9,9 @@ import { ANON_COOKIE, getVisitor, readVisitor } from "@/lib/visitor";
 import { createTestDb } from "./helpers/db";
 
 // The signed-in Member (or null) that `getSession` reports.
-const sessionRef = vi.hoisted(() => ({ current: null as null | { member: { id: string } } }));
+const sessionRef = vi.hoisted(() => ({
+  current: null as null | { member: { id: string; teamId: string; displayName: string } },
+}));
 vi.mock("@/lib/session", () => ({ getSession: async () => sessionRef.current }));
 
 // A minimal cookie jar standing in for Next's request cookies.
@@ -86,15 +88,21 @@ describe("getVisitor / readVisitor", () => {
 describe("a signed-in Member (G1)", () => {
   it("acts as member:<id>, never as their anonymous cookie", async () => {
     const anon = await getVisitor();
-    sessionRef.current = { member: { id: "m1" } };
-    const expected = { anonId: "member:m1", actorId: "member:m1", memberId: "m1" };
+    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
+    const expected = {
+      anonId: "member:m1",
+      actorId: "member:m1",
+      memberId: "m1",
+      teamId: "t1",
+      displayName: "Olga",
+    };
     expect(await readVisitor()).toEqual(expected);
     expect(await getVisitor()).toEqual(expected);
     expect((await getVisitor()).actorId).not.toBe(anon.actorId);
   });
 
   it("is not issued an anonymous cookie", async () => {
-    sessionRef.current = { member: { id: "m1" } };
+    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
     await getVisitor();
     expect(setSpy).not.toHaveBeenCalled();
     expect(jar.has(ANON_COOKIE)).toBe(false);
@@ -102,16 +110,16 @@ describe("a signed-in Member (G1)", () => {
 
   it("goes back to the anonymous identity after signing out", async () => {
     const anon = await getVisitor();
-    sessionRef.current = { member: { id: "m1" } };
+    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
     expect((await readVisitor())?.actorId).toBe("member:m1");
     sessionRef.current = null;
     expect(await readVisitor()).toEqual(anon);
   });
 
   it("gets a rate-limit identity of their own, never a Visitor's", async () => {
-    sessionRef.current = { member: { id: "m1" } };
+    sessionRef.current = { member: { id: "m1", teamId: "t1", displayName: "Olga" } };
     const member = await getVisitor();
-    sessionRef.current = { member: { id: "m2" } };
+    sessionRef.current = { member: { id: "m2", teamId: "t1", displayName: "Bo" } };
     const other = await getVisitor();
     const anon = await (async () => {
       sessionRef.current = null;
