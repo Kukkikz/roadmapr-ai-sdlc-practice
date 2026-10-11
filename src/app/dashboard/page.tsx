@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { signOutAction } from "@/components/auth/sign-out-action";
+import { DeleteTeamDialog } from "@/components/team/delete-team-dialog";
 import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
 import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
@@ -60,6 +61,10 @@ async function DashboardContent() {
           Sign out
         </Button>
       </form>
+      {/* Last on the page, as the SPEC says (US-3.8). */}
+      {session.member.role === "owner" ? (
+        <DeleteTeamDialog teamName={session.team.name} teamSlug={session.team.slug} />
+      ) : null}
     </>
   );
 }

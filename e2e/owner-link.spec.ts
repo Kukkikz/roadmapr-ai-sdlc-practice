@@ -1,23 +1,6 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { generateInvite, joinWithInvite, unique } from "./team-helpers";
-
-/** Creates a Team and returns the Owner link shown on the save-link card, then opens the dashboard. */
-async function createTeamKeepingOwnerLink(page: Page) {
-  const slug = `ol-${unique()}`;
-  await page.goto("/new");
-  await page.getByLabel("Team name").fill(`Team ${slug}`);
-  await page.getByLabel("Team slug").fill(slug);
-  await page.getByLabel("First Board name").fill("Ideas");
-  await page.getByLabel("Your display name").fill("Olga");
-  await page.getByRole("button", { name: "Create Team" }).click();
-  const link = page.getByTestId("owner-link");
-  await expect(link).toHaveText(/^https?:\/\/.+\/login\/[A-Za-z0-9_-]{43}$/);
-  const ownerLink = (await link.textContent()) ?? "";
-  await page.getByRole("link", { name: "Go to dashboard" }).click();
-  await expect(page.getByRole("heading", { name: `Team ${slug}` })).toBeVisible();
-  return { slug, ownerLink };
-}
+import { createTeamKeepingOwnerLink, generateInvite, joinWithInvite } from "./team-helpers";
 
 test("replacing the Owner link shows the new one once and kills the old one (US-3.2)", async ({
   page,
