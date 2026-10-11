@@ -38,4 +38,13 @@ test("a Member changes an Idea's status; Visitors see it but get no control (US-
   await expect(visitorPage.getByRole("combobox", { name: "Status" })).toHaveCount(0);
   await expect(visitorPage.getByRole("button", { name: "Change status" })).toHaveCount(0);
   await visitor.close();
+
+  // A Member of another Team sees the Idea but gets no control either.
+  const stranger = await browser.newContext({ baseURL: baseURL! });
+  const strangerPage = await stranger.newPage();
+  await createTeamKeepingOwnerLink(strangerPage, "Mallory");
+  await strangerPage.goto(ideaUrl);
+  await expect(strangerPage.getByRole("heading", { name: "Dark mode please" })).toBeVisible();
+  await expect(strangerPage.getByRole("combobox", { name: "Status" })).toHaveCount(0);
+  await stranger.close();
 });
