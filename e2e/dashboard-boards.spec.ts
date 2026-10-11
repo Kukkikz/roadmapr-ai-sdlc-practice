@@ -1,6 +1,11 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { createTeamKeepingOwnerLink, generateInvite, joinWithInvite } from "./team-helpers";
+import {
+  createTeamKeepingOwnerLink,
+  generateInvite,
+  hydrated,
+  joinWithInvite,
+} from "./team-helpers";
 
 test("the dashboard lists the Team's Boards, and an Owner creates another (US-4.1)", async ({
   page,
@@ -126,4 +131,46 @@ test("editing a Board to a taken slug is a field error; Members have no Edit but
   const bo = await joinWithInvite(browser, baseURL!, invite, "Bo");
   await expect(bo.page.getByRole("button", { name: /^Edit / })).toHaveCount(0);
   await bo.context.close();
+});
+
+test("an Owner deletes a Board after typing its name, and its address is free again (US-4.3)", async ({
+  page,
+}) => {
+  const { slug } = await createTeamKeepingOwnerLink(page);
+  await page.goto(`/${slug}/feedback`);
+  await page.getByRole("button", { name: "Submit idea" }).click();
+  await page.getByRole("dialog").getByLabel("Title").fill("Doomed idea");
+  await page.getByRole("dialog").getByRole("button", { name: "Submit idea" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Doomed idea" })).toBeVisible();
+  await page.goto("/dashboard");
+  await hydrated(page);
+
+  await page.getByRole("button", { name: "Delete Ideas" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("all its Ideas, Votes and Comments")).toBeVisible();
+  await expect(dialog.getByText("all its Tags")).toBeVisible();
+  await expect(dialog.getByText("its Board share link")).toBeVisible();
+  const confirm = dialog.getByRole("button", { name: "Delete Board" });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel(/Type .* to confirm/).fill("ideas");
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel(/Type .* to confirm/).fill("Ideas");
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByText("No Boards yet. Create the first one")).toBeVisible();
+  await page.goto(`/${slug}/feedback`);
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+
+  // The slug is free for a new Board, which starts empty.
+  await page.goto("/dashboard");
+  await hydrated(page);
+  await page.getByRole("button", { name: "Create board" }).click();
+  await page.getByRole("dialog").getByLabel("Board name").fill("Feedback");
+  await page.getByRole("dialog").getByRole("button", { name: "Create board" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.goto(`/${slug}/feedback`);
+  await expect(page.getByRole("heading", { name: "Feedback", level: 1 })).toBeVisible();
+  await expect(page.getByText("Doomed idea")).toHaveCount(0);
 });

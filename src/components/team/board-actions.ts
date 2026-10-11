@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { AuthorizationError, requireSessionRole } from "@/lib/authz";
 import { createBoardForTeam } from "@/lib/create-board";
 import { rotateBoardShareLink } from "@/lib/board-share-links";
+import { deleteBoardConfirmed } from "@/lib/delete-board";
 import { editBoardForTeam } from "@/lib/edit-board";
 import type { CreateBoardFields } from "@/lib/create-board-input";
 import { formText } from "@/lib/form-data";
@@ -92,6 +93,37 @@ export async function rotateShareLinkAction(boardId: string): Promise<RotateShar
     if (!link) return { ok: false, error: "not-found" };
     revalidatePath("/dashboard");
     return { ok: true, sharePath: `/join/board/${link.token}` };
+  } catch (error) {
+    if (error instanceof AuthorizationError) return { ok: false, error: "forbidden" };
+    throw error;
+  }
+}
+
+export type DeleteBoardState =
+  { ok: true } | { ok: false; error: "wrong_confirmation" | "forbidden" | "not-found" };
+
+/**
+ * An Owner deletes a Board of their own Team after typing its name (US-4.3). The first line is
+ * `requireSessionRole` (US-3.6); the Team comes from the Session, `boardId` is only honoured
+ * together with it, and the typed name is checked again here on the server, so skipping the
+ * dialog's disabled button deletes nothing.
+ */
+export async function deleteBoardAction(
+  _previous: DeleteBoardState | null,
+  formData: FormData,
+): Promise<DeleteBoardState> {
+  try {
+    const { team } = await requireSessionRole("owner");
+    const result = await deleteBoardConfirmed(
+      getDb(),
+      team.id,
+      formText(formData, "boardId"),
+      formText(formData, "confirmation"),
+    );
+    if (result === "not_found") return { ok: false, error: "not-found" };
+    if (result === "wrong_confirmation") return { ok: false, error: "wrong_confirmation" };
+    revalidatePath("/dashboard");
+    return { ok: true };
   } catch (error) {
     if (error instanceof AuthorizationError) return { ok: false, error: "forbidden" };
     throw error;

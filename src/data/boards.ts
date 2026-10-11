@@ -63,3 +63,16 @@ export async function updateBoard(
     .returning();
   return row ?? null;
 }
+
+/**
+ * Deletes a Board of the given Team for good; true if one was deleted. The database cascades to
+ * its Ideas, Votes, Comments, Tags and share links. Only the confirmed Owner flow
+ * (`deleteBoardConfirmed`) may call this.
+ */
+export async function deleteBoard(db: Db, teamId: string, boardId: string): Promise<boolean> {
+  const rows = await db
+    .delete(boards)
+    .where(and(eq(boards.id, boardId), eq(boards.teamId, teamId)))
+    .returning({ id: boards.id });
+  return rows.length > 0;
+}
