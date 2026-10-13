@@ -11,6 +11,11 @@ export async function createTag(db: Db, input: { boardId: string; name: string; 
   return row;
 }
 
+export async function getTag(db: Db, tagId: string) {
+  const [row] = await db.select().from(tags).where(eq(tags.id, tagId));
+  return row ?? null;
+}
+
 export function listTags(db: Db, boardId: string) {
   return db.select().from(tags).where(eq(tags.boardId, boardId)).orderBy(asc(tags.name));
 }

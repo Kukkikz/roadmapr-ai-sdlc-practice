@@ -238,7 +238,7 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 ### Tags
 
-- [ ] Owner/members create, rename, recolour and delete tags per board [US-5.2]
+- [x] Owner/members create, rename, recolour and delete tags per board [US-5.2] (a "Tags" button and dialog on each Board in the dashboard, for every Member; `src/lib/manage-tags.ts`, `tag-actions.ts`; names are unique per Board ignoring case, at most 30 characters; colours are a fixed set of five that map to existing `DESIGN.md` colours, shown as the 4px left marker of `TagChip`; deleting a Tag cascades off its Ideas)
 - [ ] Assign/remove tags on ideas [US-5.2]
 
 ### Moderation

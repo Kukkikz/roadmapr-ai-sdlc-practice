@@ -23,6 +23,10 @@ _Avoid_: Members-only, unlisted
 A piece of feedback submitted to a Board, with a status of open, planned, in progress, shipped or declined.
 _Avoid_: Feature request, suggestion, post
 
+**Tag**:
+A short label a Member creates on a Board and puts on that Board's Ideas, with a name and one of a few colours. Deleting a Tag only takes it off the Ideas.
+_Avoid_: Label, category
+
 ## People
 
 **Visitor**:

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TagChip } from "./tag-chip";
 import type { IdeaStatus } from "@/db/schema";
 import { plural } from "@/lib/format";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
@@ -12,7 +13,7 @@ export type IdeaCardData = {
   status: IdeaStatus;
   voteCount: number;
   commentCount: number;
-  tags: { id: string; name: string }[];
+  tags: { id: string; name: string; color: string }[];
   /** Whether the current Visitor has already upvoted it. */
   voted: boolean;
 };
@@ -44,7 +45,7 @@ export function IdeaCard({
             <Badge variant={statusVariant(idea.status)}>{STATUS_LABELS[idea.status]}</Badge>
           )}
           {idea.tags.map((tag) => (
-            <Badge key={tag.id}>{tag.name}</Badge>
+            <TagChip key={tag.id} name={tag.name} color={tag.color} />
           ))}
           {compact ? null : (
             <span className="ml-auto inline-flex items-center gap-1 text-[13px] text-muted-foreground">
