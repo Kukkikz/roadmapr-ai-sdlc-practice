@@ -40,7 +40,8 @@ test("public Board and Idea pages carry a title, description and Open Graph tags
   const visitor = await browser.newContext({ baseURL: baseURL! });
   const visitorPage = await visitor.newPage();
   await visitorPage.goto(ideaUrl);
-  await expect(visitorPage.locator("head")).not.toContainText("Dark mode please");
+  await expect(visitorPage.locator("html")).not.toContainText("Dark mode please");
+  expect(await visitorPage.title()).not.toContain("Dark mode please");
   await visitor.close();
 });
 
