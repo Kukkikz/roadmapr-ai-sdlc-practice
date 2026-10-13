@@ -22,6 +22,7 @@ const board = (id: string, name: string, slug: string, isPublic = true) => ({
   description: "",
   isPublic,
   hasShareLink: false,
+  tags: [],
 });
 
 describe("BoardsPanel (US-4.1, US-4.3)", () => {
@@ -66,6 +67,15 @@ describe("BoardsPanel (US-4.1, US-4.3)", () => {
       'aria-label="Delete Ideas"',
     );
     expect(render({ boards, teamSlug: "acme", isOwner: false })).not.toContain("Delete");
+  });
+
+  it("gives every Member a Tags button on each Board, Owners and plain Members alike", () => {
+    const boards = [board("1", "Ideas", "ideas-board")];
+    for (const isOwner of [true, false]) {
+      expect(render({ boards, teamSlug: "acme", isOwner })).toContain(
+        'aria-label="Tags for Ideas"',
+      );
+    }
   });
 
   it("escapes Board names instead of rendering markup", () => {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommentForm } from "@/components/board/comment-form";
+import { TagChip } from "@/components/board/tag-chip";
 import { VoteButton } from "@/components/board/vote-button";
 import { IdeaStatusForm } from "@/components/team/idea-status-form";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,7 @@ export default async function IdeaPage({
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={statusVariant(idea.status)}>{STATUS_LABELS[idea.status]}</Badge>
             {idea.tags.map((tag) => (
-              <Badge key={tag.id}>{tag.name}</Badge>
+              <TagChip key={tag.id} name={tag.name} color={tag.color} />
             ))}
           </div>
           <p className="flex items-center gap-2 text-[13px] text-muted-foreground">

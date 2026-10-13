@@ -7,7 +7,7 @@ import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
 import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
 import { Button } from "@/components/ui/button";
-import { findActiveBoardShareLink, listActiveMembers, listBoardsForTeam } from "@/data";
+import { findActiveBoardShareLink, listActiveMembers, listBoardsForTeam, listTags } from "@/data";
 import { getDb } from "@/db";
 import { listInviteLinks } from "@/lib/invite-links";
 import { getSession } from "@/lib/session";
@@ -42,6 +42,9 @@ async function DashboardContent() {
     );
     for (const link of links) if (link?.boardId) sharedBoardIds.add(link.boardId);
   }
+  const tagsByBoard = new Map(
+    await Promise.all(boards.map(async (b) => [b.id, await listTags(db, b.id)] as const)),
+  );
   return (
     <>
       <h1 className="text-[40px] leading-[1.2] text-ink">{session.team.name}</h1>
@@ -56,6 +59,11 @@ async function DashboardContent() {
           description: board.description ?? "",
           isPublic: board.visibility === "public",
           hasShareLink: sharedBoardIds.has(board.id),
+          tags: (tagsByBoard.get(board.id) ?? []).map(({ id, name, color }) => ({
+            id,
+            name,
+            color,
+          })),
         }))}
         teamSlug={session.team.slug}
         isOwner={session.member.role === "owner"}

@@ -179,6 +179,9 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-5.2** As a Member, I can manage tags.
 
 - AC: Create, rename, recolour and delete tags per Board; deleting a tag removes it from Ideas.
+- AC: Any Member manages the Tags of their own Team's Boards from the dashboard ("Tags" on each Board). A Board of another Team answers like a missing one.
+- AC: A Tag name is required, trimmed, at most 30 characters, and unique within its Board (ignoring upper and lower case). A taken name shows an error and changes nothing.
+- AC: A Tag colour is one of grey, blue, green, yellow or red (a new Tag is grey). It shows as a 4px marker at the left of the Tag chip; the chip's text and background stay the same.
 - AC: Assign and remove tags on Ideas.
 
 **US-5.3** As a Member, I can hide and unhide Ideas and Comments.
