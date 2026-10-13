@@ -99,7 +99,7 @@ export function TagsDialog({
         {tags.length > 0 ? (
           <ul aria-label="Tags" className="flex flex-col gap-3">
             {tags.map((tag) => (
-              <TagRow key={tag.id} tag={tag} />
+              <TagRow key={`${tag.id}:${tag.name}:${tag.color}`} tag={tag} />
             ))}
           </ul>
         ) : (
@@ -143,6 +143,7 @@ function TagRow({ tag }: { tag: BoardTag }) {
             autoComplete="off"
             className="w-44"
             aria-invalid={message ? true : undefined}
+            aria-describedby={message ? `tag-error-${tag.id}` : undefined}
             onChange={(event) => setName(event.target.value)}
           />
           <Label htmlFor={`tag-color-${tag.id}`} className="sr-only">
@@ -166,7 +167,7 @@ function TagRow({ tag }: { tag: BoardTag }) {
         </form>
       </div>
       {message ? (
-        <p role="alert" className="text-sm text-danger">
+        <p id={`tag-error-${tag.id}`} role="alert" className="text-sm text-danger">
           {message}
         </p>
       ) : null}
