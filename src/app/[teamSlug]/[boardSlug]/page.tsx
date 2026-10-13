@@ -8,6 +8,7 @@ import { listIdeas, listTags, votedIdeaIds } from "@/data";
 import { getDb } from "@/db";
 import { boardHref, parseBoardQuery } from "@/lib/board-query";
 import { getVisibleBoard } from "@/lib/board-view";
+import { getSession } from "@/lib/session";
 import { readVisitor } from "@/lib/visitor";
 
 export default async function BoardPage({
@@ -21,6 +22,8 @@ export default async function BoardPage({
 
   const query = parseBoardQuery(await searchParams);
   const db = getDb();
+  // The Team's own Members also see hidden Ideas, marked as hidden (US-5.3, G2).
+  const isTeamMember = (await getSession())?.team.id === team.id;
   const [ideas, tags] = await Promise.all([
     listIdeas(db, {
       boardId: board.id,
@@ -28,6 +31,7 @@ export default async function BoardPage({
       status: query.status,
       tagId: query.tag,
       search: query.q,
+      includeHidden: isTeamMember,
     }),
     listTags(db, board.id),
   ]);
