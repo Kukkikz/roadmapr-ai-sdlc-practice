@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommentForm } from "@/components/board/comment-form";
@@ -11,11 +12,23 @@ import { getIdea, hasVoted, listComments, listTags, markIdeaReviewed } from "@/d
 import { getDb } from "@/db";
 import { getVisibleBoard } from "@/lib/board-view";
 import { formatDate } from "@/lib/format";
+import { ideaMetadata } from "@/lib/seo";
 import { postingAsFor } from "@/lib/posting-as";
 import { getSession } from "@/lib/session";
 import { STATUS_LABELS, statusVariant } from "@/lib/status";
 import { readVisitor } from "@/lib/visitor";
 import { cn } from "@/lib/utils";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[teamSlug]/[boardSlug]/ideas/[ideaId]">): Promise<Metadata> {
+  const { teamSlug, boardSlug, ideaId } = await params;
+  const found = await getVisibleBoard(teamSlug, boardSlug);
+  if (!found) return {};
+  // Public lookup only: a hidden Idea never lends its title to the tab or a link preview (G2).
+  const idea = await getIdea(getDb(), ideaId, { boardId: found.board.id });
+  return idea ? ideaMetadata(found.team, found.board, idea) : {};
+}
 
 export default async function IdeaPage({
   params,
