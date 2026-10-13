@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CommentForm } from "@/components/board/comment-form";
 import { TagChip } from "@/components/board/tag-chip";
 import { VoteButton } from "@/components/board/vote-button";
+import { HideToggle } from "@/components/team/hide-toggle";
 import { IdeaStatusForm } from "@/components/team/idea-status-form";
 import { IdeaTagsForm } from "@/components/team/idea-tags-form";
 import { Badge } from "@/components/ui/badge";
@@ -25,13 +26,13 @@ export default async function IdeaPage({
   const { board, team } = found;
 
   const db = getDb();
-  // Scoped to this Board, and hidden Ideas resolve to null for Visitors (G2).
-  const idea = await getIdea(db, ideaId, { boardId: board.id });
-  if (!idea) notFound();
-  const comments = await listComments(db, idea.id);
-  const visitor = await readVisitor();
-  // Only a Member of this Board's own Team gets the status control (US-5.1).
+  // Only a Member of this Board's own Team gets the Member controls (US-5.1, US-5.3).
   const isTeamMember = (await getSession())?.team.id === team.id;
+  // Scoped to this Board. Hidden Ideas and Comments resolve only for the Team's Members (G2).
+  const idea = await getIdea(db, ideaId, { boardId: board.id, includeHidden: isTeamMember });
+  if (!idea) notFound();
+  const comments = await listComments(db, idea.id, { includeHidden: isTeamMember });
+  const visitor = await readVisitor();
   const voted = visitor ? await hasVoted(db, idea.id, visitor.actorId) : false;
 
   return (
@@ -49,6 +50,7 @@ export default async function IdeaPage({
           <h1 className="text-[32px] leading-[1.2] text-ink">{idea.title}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={statusVariant(idea.status)}>{STATUS_LABELS[idea.status]}</Badge>
+            {idea.hidden ? <Badge>Hidden</Badge> : null}
             {idea.tags.map((tag) => (
               <TagChip key={tag.id} name={tag.name} color={tag.color} />
             ))}
@@ -65,6 +67,7 @@ export default async function IdeaPage({
       {isTeamMember ? (
         <div className="flex flex-col gap-4">
           <IdeaStatusForm ideaId={idea.id} status={idea.status} />
+          <HideToggle kind="idea" id={idea.id} hidden={idea.hidden} />
           <IdeaTagsForm
             key={idea.tags.map((tag) => tag.id).join(",")}
             ideaId={idea.id}
@@ -102,7 +105,11 @@ export default async function IdeaPage({
                       {formatDate(comment.createdAt)}
                     </span>
                   </p>
+                  {comment.hidden ? <Badge>Hidden</Badge> : null}
                   <p className="whitespace-pre-wrap">{comment.body}</p>
+                  {isTeamMember ? (
+                    <HideToggle kind="comment" id={comment.id} hidden={comment.hidden} />
+                  ) : null}
                 </li>
               );
             })}
@@ -110,7 +117,13 @@ export default async function IdeaPage({
         ) : (
           <p className="text-body">No comments yet.</p>
         )}
-        <CommentForm ideaId={idea.id} postingAs={postingAsFor(visitor, team.id)} />
+        {idea.hidden ? (
+          <p className="text-sm text-muted-foreground">
+            This Idea is hidden. Unhide it to allow votes and new comments.
+          </p>
+        ) : (
+          <CommentForm ideaId={idea.id} postingAs={postingAsFor(visitor, team.id)} />
+        )}
       </section>
     </article>
   );

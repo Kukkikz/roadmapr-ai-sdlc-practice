@@ -16,6 +16,8 @@ export type IdeaCardData = {
   tags: { id: string; name: string; color: string }[];
   /** Whether the current Visitor has already upvoted it. */
   voted: boolean;
+  /** Set only for the Team's Members, who also see hidden Ideas (US-5.3). */
+  hidden?: boolean;
 };
 
 export function IdeaCard({
@@ -44,6 +46,7 @@ export function IdeaCard({
           {compact ? null : (
             <Badge variant={statusVariant(idea.status)}>{STATUS_LABELS[idea.status]}</Badge>
           )}
+          {idea.hidden ? <Badge>Hidden</Badge> : null}
           {idea.tags.map((tag) => (
             <TagChip key={tag.id} name={tag.name} color={tag.color} />
           ))}

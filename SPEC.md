@@ -188,6 +188,8 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 **US-5.3** As a Member, I can hide and unhide Ideas and Comments.
 
 - AC: Hidden items disappear for Visitors (G2) and show as hidden to Members.
+- AC: On the Idea page a Member of the Board's own Team gets "Hide idea" / "Unhide idea" and, on each Comment, "Hide comment" / "Unhide comment". A hidden Idea or Comment shows a "Hidden" badge to Members, and a hidden Idea stays in the Board list for them with that badge.
+- AC: An Idea or Comment of another Team's Board answers like a missing one and changes nothing. Hiding what is already hidden changes nothing. Nothing is deleted.
 
 **US-5.4** As a Member, I can reply as the team.
 

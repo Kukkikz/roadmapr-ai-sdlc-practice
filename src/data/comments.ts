@@ -42,3 +42,9 @@ export async function setCommentHidden(db: Db, commentId: string, hidden: boolea
     .returning();
   return row ?? null;
 }
+
+/** One Comment by id, hidden or not (moderators resolve hidden ones), or null. */
+export async function getComment(db: Db, commentId: string) {
+  const [row] = await db.select().from(comments).where(eq(comments.id, commentId));
+  return row ?? null;
+}

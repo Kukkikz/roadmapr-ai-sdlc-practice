@@ -243,8 +243,8 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 ### Moderation
 
-- [ ] Hide/unhide an idea (hidden ideas are not visible publicly) [US-5.3, G2]
-- [ ] Hide/unhide a comment (uses `comments.hidden`) [US-5.3, G2]
+- [x] Hide/unhide an idea (hidden ideas are not visible publicly) [US-5.3, G2] (`moderateIdea` in `src/lib/moderate.ts`, `setIdeaHiddenAction`, `HideToggle` on the Idea page; Members see hidden Ideas with a "Hidden" badge on the Board and Idea pages)
+- [x] Hide/unhide a comment (uses `comments.hidden`) [US-5.3, G2] (`moderateComment`, `setCommentHiddenAction`; scoped through the Comment's Idea to the Session's Team)
 - [ ] Moderation queue on dashboard (newest unreviewed ideas); opening, tagging, changing status of or hiding an Idea sets `reviewed_at` [US-5.5]. Stitch screens: dashboard `69634165…`, queue empty `3dae060e…`, loading `599c73d1…`
 
 ---
