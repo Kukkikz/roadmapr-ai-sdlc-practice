@@ -1,0 +1,59 @@
+name: Auto-merge
+
+# Turns on GitHub auto-merge (squash) for PRs that stay out of the sensitive
+# paths below; the three required CI checks still gate the actual merge.
+# Anything sensitive gets the `needs-human` label and waits for the Owner.
+# A draft PR or a `hold` label always blocks auto-merge.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled, converted_to_draft]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  decide:
+    name: Decide auto-merge
+    # Same-repo PRs only: fork PRs get a read-only token anyway.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      IS_DRAFT: ${{ github.event.pull_request.draft }}
+      LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+    steps:
+      # No checkout: the PR's code is never run here, only its file list is read.
+      - name: Decide
+        run: |
+          set -euo pipefail
+
+          # Paths that need the Owner's confirmation (CLAUDE.md "Ask before").
+          SENSITIVE='^(\.github/|drizzle/|DESIGN\.md$|\.stitch\.json$|docs/adr/|package(-lock)?\.json$|next\.config\.ts$|vercel\.(json|ts)$|\.env|src/db/schema\.ts$|src/lib/(authz|session|visitor|visitor-access|link-token|invite-links|owner-links|board-share-links|env)\.ts$|src/data/(links|sessions)\.ts$|src/components/auth/|e2e/(owner-link|invite-links)\.spec\.ts$)'
+
+          reasons=()
+          [ "$IS_DRAFT" = "true" ] && reasons+=("PR is a draft")
+          case ",$LABELS," in *,hold,*) reasons+=("has the hold label");; esac
+
+          hits=$(gh api --paginate "repos/$GH_REPO/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' | grep -E "$SENSITIVE" | sort -u || true)
+          [ -n "$hits" ] && reasons+=("touches sensitive paths: $(echo "$hits" | head -8 | paste -sd, -)")
+
+          if [ ${#reasons[@]} -eq 0 ]; then
+            gh pr edit "$PR" --remove-label needs-human 2>/dev/null || true
+            gh pr merge "$PR" --auto --squash
+            echo "Auto-merge enabled for #$PR."
+          else
+            gh label create needs-human --color D93F0B \
+              --description "Owner must review and merge" 2>/dev/null || true
+            gh pr edit "$PR" --add-label needs-human
+            gh pr merge "$PR" --disable-auto 2>/dev/null || true
+            printf 'Not auto-merging #%s: %s\n' "$PR" "$(IFS=';'; echo "${reasons[*]}")"
+          fi
