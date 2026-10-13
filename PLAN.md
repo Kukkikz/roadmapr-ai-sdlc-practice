@@ -233,7 +233,7 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 ### Status Management
 
 - [x] Idea statuses: `open` (default for new ideas), `planned`, `in_progress`, `shipped`, `declined` (visible on board, not on roadmap); any transition allowed [G7]
-- [~] Owner/members can change status from idea detail and dashboard [US-5.1] (idea detail done: `changeIdeaStatus`, `changeStatusAction`, `IdeaStatusForm`; the dashboard control ships with the moderation queue)
+- [x] Owner/members can change status from idea detail and dashboard [US-5.1] (`changeIdeaStatus`, `changeStatusAction`, `IdeaStatusForm`; the dashboard control is on each row of the "To review" queue)
 - [x] Record status change history (who, when, from → to) [US-5.1] (written by `setIdeaStatus`; showing the history is not built)
 
 ### Tags
@@ -245,7 +245,7 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 - [x] Hide/unhide an idea (hidden ideas are not visible publicly) [US-5.3, G2] (`moderateIdea` in `src/lib/moderate.ts`, `setIdeaHiddenAction`, `HideToggle` on the Idea page; Members see hidden Ideas with a "Hidden" badge on the Board and Idea pages)
 - [x] Hide/unhide a comment (uses `comments.hidden`) [US-5.3, G2] (`moderateComment`, `setCommentHiddenAction`; scoped through the Comment's Idea to the Session's Team)
-- [ ] Moderation queue on dashboard (newest unreviewed ideas); opening, tagging, changing status of or hiding an Idea sets `reviewed_at` [US-5.5]. Stitch screens: dashboard `69634165…`, queue empty `3dae060e…`, loading `599c73d1…`
+- [x] Moderation queue on dashboard (newest unreviewed ideas); opening, tagging, changing status of or hiding an Idea sets `reviewed_at` [US-5.5]. Stitch screens: dashboard `69634165…`, queue empty `3dae060e…`, loading `599c73d1…` (`ModerationQueue`, `listUnreviewedIdeas`, `markIdeaReviewed`; no loading skeleton beyond the dashboard's)
 
 ---
 

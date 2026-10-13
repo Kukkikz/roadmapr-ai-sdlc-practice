@@ -1,13 +1,20 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { signOutAction } from "@/components/auth/sign-out-action";
+import { ModerationQueue } from "@/components/team/moderation-queue";
 import { BoardsPanel } from "@/components/team/boards-panel";
 import { DeleteTeamDialog } from "@/components/team/delete-team-dialog";
 import { InviteLinksPanel } from "@/components/team/invite-links-panel";
 import { MembersPanel } from "@/components/team/members-panel";
 import { OwnerLinkPanel } from "@/components/team/owner-link-panel";
 import { Button } from "@/components/ui/button";
-import { findActiveBoardShareLink, listActiveMembers, listBoardsForTeam, listTags } from "@/data";
+import {
+  findActiveBoardShareLink,
+  listActiveMembers,
+  listBoardsForTeam,
+  listTags,
+  listUnreviewedIdeas,
+} from "@/data";
 import { getDb } from "@/db";
 import { listInviteLinks } from "@/lib/invite-links";
 import { getSession } from "@/lib/session";
@@ -21,16 +28,19 @@ const formatDate = (date: Date) =>
     timeZone: "UTC",
   });
 
+const QUEUE_LIMIT = 50;
+
 async function DashboardContent() {
   const session = await getSession();
   // Signed-out visitors get the same page as any unknown URL (G3).
   if (!session) notFound();
   // Only Owners manage links (US-3.6); the action refuses anyone else as well.
   const db = getDb();
-  const [invites, members, boards] = await Promise.all([
+  const [invites, members, boards, queue] = await Promise.all([
     session.member.role === "owner" ? listInviteLinks(db, session.team.id) : null,
     listActiveMembers(db, session.team.id),
     listBoardsForTeam(db, session.team.id),
+    listUnreviewedIdeas(db, session.team.id, QUEUE_LIMIT + 1),
   ]);
   // Whether each Private board has a working share link; only Owners manage them.
   const sharedBoardIds = new Set<string>();
@@ -51,6 +61,13 @@ async function DashboardContent() {
       <p className="text-base text-body">
         Signed in as {session.member.displayName} ({session.member.role}).
       </p>
+      <ModerationQueue
+        teamSlug={session.team.slug}
+        more={queue.length > QUEUE_LIMIT}
+        ideas={queue
+          .slice(0, QUEUE_LIMIT)
+          .map((idea) => ({ ...idea, createdLabel: formatDate(idea.createdAt) }))}
+      />
       <BoardsPanel
         boards={boards.map((board) => ({
           id: board.id,

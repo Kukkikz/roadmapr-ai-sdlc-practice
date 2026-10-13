@@ -202,6 +202,7 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 
 - AC: The dashboard lists Ideas with `reviewed_at` null, newest first, across the Team's Boards.
 - AC: Opening, tagging, changing status of or hiding an Idea sets `reviewed_at`.
+- AC: The list is the dashboard's "To review" section, with each Idea's title (a link), Board and date, a "Hidden" badge where it applies, and its status control (US-5.1). An empty queue says "Nothing to review". Only the first review counts; `reviewed_at` is never reset. Opening means a Member of the Board's Team viewing the Idea page; a request that is refused or invalid does not count, but a valid one that changes nothing (the same status, hiding what is hidden) does. The list shows the newest 50 and says so when there are more.
 
 ## Non-functional requirements
 

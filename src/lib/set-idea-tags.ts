@@ -1,4 +1,4 @@
-import { assignTag, getBoardById, getIdea, listTags, removeTag } from "@/data";
+import { assignTag, getBoardById, getIdea, listTags, markIdeaReviewed, removeTag } from "@/data";
 import type { Db } from "@/data";
 
 export type SetIdeaTagsResult = "saved" | "invalid" | "not_found";
@@ -40,5 +40,6 @@ export async function setIdeaTags(
     if ([...wanted].some((id) => !stillThere.has(id))) return "invalid";
     throw error;
   }
+  await markIdeaReviewed(db, idea.id);
   return "saved";
 }

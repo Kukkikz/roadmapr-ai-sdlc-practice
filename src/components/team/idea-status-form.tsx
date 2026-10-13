@@ -11,7 +11,16 @@ import { IDEA_STATUSES, type IdeaStatus } from "@/db/schema";
  * A Member's status control on the Idea page (US-5.1): any status to any other. The server
  * checks the role, the Team and the value again, so this form is only a convenience.
  */
-export function IdeaStatusForm({ ideaId, status }: { ideaId: string; status: IdeaStatus }) {
+export function IdeaStatusForm({
+  ideaId,
+  status,
+  title,
+}: {
+  ideaId: string;
+  status: IdeaStatus;
+  /** Names the control for assistive tech where several share a page (the queue). */
+  title?: string;
+}) {
   const [state, action, pending] = useActionState(changeStatusAction, null);
   return (
     <form action={action} className="flex flex-wrap items-center gap-2">
@@ -20,6 +29,7 @@ export function IdeaStatusForm({ ideaId, status }: { ideaId: string; status: Ide
       <select
         id={`status-${ideaId}`}
         name="status"
+        aria-label={title ? `Status of ${title}` : undefined}
         defaultValue={status}
         className="h-11 rounded-sm border border-input bg-background px-4 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
       >
