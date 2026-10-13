@@ -4,8 +4,9 @@ import { CommentForm } from "@/components/board/comment-form";
 import { TagChip } from "@/components/board/tag-chip";
 import { VoteButton } from "@/components/board/vote-button";
 import { IdeaStatusForm } from "@/components/team/idea-status-form";
+import { IdeaTagsForm } from "@/components/team/idea-tags-form";
 import { Badge } from "@/components/ui/badge";
-import { getIdea, hasVoted, listComments } from "@/data";
+import { getIdea, hasVoted, listComments, listTags } from "@/data";
 import { getDb } from "@/db";
 import { getVisibleBoard } from "@/lib/board-view";
 import { formatDate } from "@/lib/format";
@@ -61,7 +62,17 @@ export default async function IdeaPage({
         </div>
       </header>
 
-      {isTeamMember ? <IdeaStatusForm ideaId={idea.id} status={idea.status} /> : null}
+      {isTeamMember ? (
+        <div className="flex flex-col gap-4">
+          <IdeaStatusForm ideaId={idea.id} status={idea.status} />
+          <IdeaTagsForm
+            key={idea.tags.map((tag) => tag.id).join(",")}
+            ideaId={idea.id}
+            boardTags={await listTags(db, board.id)}
+            appliedIds={idea.tags.map((tag) => tag.id)}
+          />
+        </div>
+      ) : null}
 
       {idea.description ? (
         <p className="text-base whitespace-pre-wrap text-body">{idea.description}</p>
