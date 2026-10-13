@@ -253,8 +253,8 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 ### UX
 
-- [x] Desktop layout check (1024px and wider); mobile and tablet are out of MVP scope [NF2] (`e2e/a11y.spec.ts` runs the Board, roadmap, Idea, create-Team and dashboard pages at 1024px and fails on sideways scroll; wider widths were not checked automatically)
-- [~] Accessibility pass (keyboard navigation, labels, contrast) [NF1] (`e2e/a11y.spec.ts` checks one h1, a name on every control and a Tab order that moves over visible elements; dialogs, error states and colour contrast are not machine-checked, and an axe-core run would need a new dev dependency, so it needs your approval)
+- [x] Desktop layout check (1024px and wider); mobile and tablet are out of MVP scope [NF2] (`e2e/a11y.spec.ts` runs the Board, roadmap, Idea, create-Team and dashboard pages at 1024px and fails on sideways scroll; 1024px is the only width tested, by your decision)
+- [x] Accessibility pass (keyboard navigation, labels, contrast) [NF1] (`e2e/a11y.spec.ts` checks one h1, a name on every control and a Tab order that moves over visible elements. Colour contrast is not tested, by your decision; dialogs and error states are not machine-checked)
 - [x] SEO basics for public board pages (titles, meta, Open Graph); Private boards are `noindex` [NF4] (`src/lib/seo.ts`, `generateMetadata` on the Board, roadmap and Idea pages; no `og:url` or image, which need a site origin setting)
 
 ### Testing
