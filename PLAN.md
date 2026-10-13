@@ -255,7 +255,7 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 - [ ] Desktop layout check (1024px and wider); mobile and tablet are out of MVP scope [NF2]
 - [ ] Accessibility pass (keyboard navigation, labels, contrast) [NF1]
-- [ ] SEO basics for public board pages (titles, meta, Open Graph); Private boards are `noindex` [NF4]
+- [x] SEO basics for public board pages (titles, meta, Open Graph); Private boards are `noindex` [NF4] (`src/lib/seo.ts`, `generateMetadata` on the Board, roadmap and Idea pages; no `og:url` or image, which need a site origin setting)
 
 ### Testing
 

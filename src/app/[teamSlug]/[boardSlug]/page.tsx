@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/board/empty-state";
@@ -8,8 +9,18 @@ import { listIdeas, listTags, votedIdeaIds } from "@/data";
 import { getDb } from "@/db";
 import { boardHref, parseBoardQuery } from "@/lib/board-query";
 import { getVisibleBoard } from "@/lib/board-view";
+import { boardMetadata } from "@/lib/seo";
 import { getSession } from "@/lib/session";
 import { readVisitor } from "@/lib/visitor";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[teamSlug]/[boardSlug]">): Promise<Metadata> {
+  const { teamSlug, boardSlug } = await params;
+  const found = await getVisibleBoard(teamSlug, boardSlug);
+  // A missing or inaccessible Board gets no tags of its own (the page is the not-found page).
+  return found ? boardMetadata(found.team, found.board) : {};
+}
 
 export default async function BoardPage({
   params,
