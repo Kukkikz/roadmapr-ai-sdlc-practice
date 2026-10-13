@@ -54,7 +54,7 @@ Next.js here is a newer version than the model knows: follow [`AGENTS.md`](AGENT
 3. Implement the smallest change that meets the criteria.
 4. Run lint, typecheck and tests before declaring done, then ask the `qa-engineer` subagent to review the diff; fix its findings and have it re-check.
 5. If behaviour changes, update `SPEC.md` first; if a term is new or changes, update `CONTEXT.md`; if styling or a component changes, update `DESIGN.md` first and re-upload it with `stitch upload design DESIGN.md` (this creates a new Stitch design system, so tell the user).
-6. Work on a branch and open a PR per task. `main` is protected: it needs a PR and the three CI checks (lint/typecheck/unit, real-Postgres integration, Playwright e2e). Do not merge, push to `main` or promote a production deployment without the user's say-so.
+6. Work on a branch and open a PR per task. `main` is protected: it needs a PR and the three CI checks (lint/typecheck/unit, real-Postgres integration, Playwright e2e). Do not merge, push to `main` or promote a production deployment without the user's say-so. Exception: `.github/workflows/auto-merge.yml` turns on auto-merge (squash) for PRs that touch none of its sensitive paths; the three CI checks still gate it. PRs that touch auth/links/sessions, the schema or migrations, `DESIGN.md`, deps, `.github/` or config get the `needs-human` label and wait for the user. A `hold` label or a draft PR blocks auto-merge.
 
 ## Definition of done
 
