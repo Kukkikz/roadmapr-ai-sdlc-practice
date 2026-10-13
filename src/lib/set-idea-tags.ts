@@ -30,7 +30,15 @@ export async function setIdeaTags(
   for (const id of wanted) if (!boardTagIds.has(id)) return "invalid";
 
   const current = new Set(idea.tags.map((tag) => tag.id));
-  for (const id of wanted) if (!current.has(id)) await assignTag(db, idea.id, id);
-  for (const id of current) if (!wanted.has(id)) await removeTag(db, idea.id, id);
+  try {
+    for (const id of wanted) if (!current.has(id)) await assignTag(db, idea.id, id);
+    for (const id of current) if (!wanted.has(id)) await removeTag(db, idea.id, id);
+  } catch (error) {
+    // Another Member deleted a Tag between the check and the write (there are no transactions on
+    // Neon HTTP). The save is idempotent, so the Member can simply try again.
+    const stillThere = new Set((await listTags(db, board.id)).map((tag) => tag.id));
+    if ([...wanted].some((id) => !stillThere.has(id))) return "invalid";
+    throw error;
+  }
   return "saved";
 }

@@ -65,6 +65,11 @@ export function IdeaTagsForm({
           {pending ? "Saving…" : "Save tags"}
         </Button>
       </fieldset>
+      {state?.ok ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Tags saved.
+        </p>
+      ) : null}
       {state && !state.ok ? (
         <p role="alert" className="text-sm text-danger">
           {state.error === "forbidden"
