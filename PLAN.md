@@ -261,11 +261,11 @@ Same rule as Phase 4: each cluster ships with its screens and a Playwright spec.
 
 Test-first for security-sensitive logic and per-slice Playwright specs happen inside Phases 3a to 5. This phase covers what spans phases.
 
-- [ ] Unit tests: vote uniqueness, status transitions, role checks (fill gaps left by the phase PRs) [US-2.2, G7, US-3.6]
-- [ ] Integration tests for server actions against in-memory PGlite (the bulk of the suite); audit for gaps against the story index below
-- [ ] Run the same integration tests against real Postgres in CI (Postgres service or Neon branch) [NF5]
-- [ ] E2E journey (Playwright), joining the per-phase specs: submit idea → upvote → team owner link login → change status → visible on roadmap
-- [ ] E2E journey: private board access via share link; member invite link join
+- [x] Unit tests: vote uniqueness, status transitions, role checks (fill gaps left by the phase PRs) [US-2.2, G7, US-3.6] (audited, no gaps: `cast-vote` incl. concurrent votes, `change-status`, `authz`)
+- [x] Integration tests for server actions against in-memory PGlite (the bulk of the suite); audit for gaps against the story index below (audited: every Member action file in `src/components/team/` has a `*-actions.test.ts`; the Visitor actions in `[boardSlug]/actions.ts` are covered through `submit-idea`, `cast-vote` and `submit-comment`; team creation and sign-out through `create-team` and `sign-out`)
+- [x] Run the same integration tests against real Postgres in CI (Postgres service or Neon branch) [NF5] (the "Integration tests (real Postgres)" check)
+- [x] E2E journey (Playwright), joining the per-phase specs: submit idea → upvote → team owner link login → change status → visible on roadmap (`e2e/journey.spec.ts`)
+- [x] E2E journey: private board access via share link; member invite link join (`e2e/private-board.spec.ts`, `e2e/invite-links.spec.ts`, `e2e/members.spec.ts`)
 - [x] Fresh-context review subagent on every PR (`qa-engineer`, `.claude/agents/qa-engineer.md`: reviews the diff against `SPEC.md` and `CONTEXT.md`, runs the checks, reports findings back); blocking findings must be fixed or explicitly dismissed by you in the PR
 
 ---
