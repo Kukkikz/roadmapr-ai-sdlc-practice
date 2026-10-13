@@ -1,11 +1,21 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/board/empty-state";
 import { IdeaCard } from "@/components/board/idea-card";
 import { listRoadmapIdeas, ROADMAP_STATUSES, votedIdeaIds } from "@/data";
 import { getDb } from "@/db";
 import { getVisibleBoard } from "@/lib/board-view";
+import { boardMetadata } from "@/lib/seo";
 import { STATUS_LABELS } from "@/lib/status";
 import { readVisitor } from "@/lib/visitor";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[teamSlug]/[boardSlug]/roadmap">): Promise<Metadata> {
+  const { teamSlug, boardSlug } = await params;
+  const found = await getVisibleBoard(teamSlug, boardSlug);
+  return found ? boardMetadata(found.team, found.board, "Roadmap") : {};
+}
 
 export default async function RoadmapPage({
   params,

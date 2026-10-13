@@ -209,7 +209,7 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - **NF1 Accessibility:** all screens keyboard-navigable, labelled form fields, WCAG AA contrast, visible focus.
 - **NF2 Desktop only:** screens are designed and tested for viewports of 1024 px and wider. Mobile and tablet layouts are out of MVP scope.
 - **NF3 Performance:** Idea list uses no N+1 queries (vote and comment counts aggregated in the query).
-- **NF4 SEO:** public board and Idea pages have title, description and Open Graph tags; Private boards are `noindex`.
+- **NF4 SEO:** public board and Idea pages have title, description and Open Graph tags; Private boards are `noindex`. The title is `{Board} · {Team}` (`{Idea} · {Board} · {Team}` for an Idea, with `Roadmap · ` in front on the roadmap); the description is the Board's or Idea's own text cut to 160 characters, or a generated line; Open Graph repeats title and description. A hidden Idea never lends its title to the page head (G2).
 - **NF5 Parity:** the same migrations and integration tests pass on PGlite and on real Postgres.
 - **NF6 Privacy:** IP addresses are used for rate limiting only and are not stored with Ideas, Votes or Comments.
 
