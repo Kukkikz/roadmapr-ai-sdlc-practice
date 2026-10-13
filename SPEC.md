@@ -183,6 +183,7 @@ Every attempt to redeem a link (the "Continue" POST) counts, valid or not, so gu
 - AC: A Tag name is required, trimmed, at most 30 characters, and unique within its Board (ignoring upper and lower case). A taken name shows an error and changes nothing.
 - AC: A Tag colour is one of grey, blue, green, yellow or red (a new Tag is grey). It shows as a 4px marker at the left of the Tag chip; the chip's text and background stay the same.
 - AC: Assign and remove tags on Ideas.
+- AC: On the Idea page a Member ticks the Board's Tags that apply and saves; Tags that were unticked come off. Only Tags of the Idea's own Board can be applied; a request that names any other Tag changes nothing. An Idea of another Team's Board answers like a missing one. Saving the same set changes nothing.
 
 **US-5.3** As a Member, I can hide and unhide Ideas and Comments.
 
