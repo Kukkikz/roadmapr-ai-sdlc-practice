@@ -7,7 +7,7 @@ import { HideToggle } from "@/components/team/hide-toggle";
 import { IdeaStatusForm } from "@/components/team/idea-status-form";
 import { IdeaTagsForm } from "@/components/team/idea-tags-form";
 import { Badge } from "@/components/ui/badge";
-import { getIdea, hasVoted, listComments, listTags } from "@/data";
+import { getIdea, hasVoted, listComments, listTags, markIdeaReviewed } from "@/data";
 import { getDb } from "@/db";
 import { getVisibleBoard } from "@/lib/board-view";
 import { formatDate } from "@/lib/format";
@@ -31,6 +31,10 @@ export default async function IdeaPage({
   // Scoped to this Board. Hidden Ideas and Comments resolve only for the Team's Members (G2).
   const idea = await getIdea(db, ideaId, { boardId: board.id, includeHidden: isTeamMember });
   if (!idea) notFound();
+  // A deliberate write during a GET: opening is the review. Keep plain links to this page for
+  // Members (no prefetch) so only a real visit counts.
+  // Opening an Idea as a Member of its Team takes it off the moderation queue (US-5.5).
+  if (isTeamMember && !idea.reviewedAt) await markIdeaReviewed(db, idea.id);
   const comments = await listComments(db, idea.id, { includeHidden: isTeamMember });
   const visitor = await readVisitor();
   const voted = visitor ? await hasVoted(db, idea.id, visitor.actorId) : false;

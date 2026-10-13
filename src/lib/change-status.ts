@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getBoardById, getIdea, setIdeaStatus } from "@/data";
+import { getBoardById, getIdea, markIdeaReviewed, setIdeaStatus } from "@/data";
 import type { Db } from "@/data";
 import { IDEA_STATUSES } from "@/db/schema";
 
@@ -30,5 +30,7 @@ export async function changeIdeaStatus(
 
   const to = statusSchema.safeParse(status);
   if (!to.success) return "invalid";
-  return (await setIdeaStatus(db, idea.id, to.data, actorId)) ? "changed" : "unchanged";
+  const changed = await setIdeaStatus(db, idea.id, to.data, actorId);
+  await markIdeaReviewed(db, idea.id);
+  return changed ? "changed" : "unchanged";
 }

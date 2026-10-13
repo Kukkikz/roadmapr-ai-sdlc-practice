@@ -1,5 +1,13 @@
-import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
-import { ideaStatusEvents, ideaTags, ideas, members, tags, type IdeaStatus } from "@/db/schema";
+import { and, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import {
+  boards,
+  ideaStatusEvents,
+  ideaTags,
+  ideas,
+  members,
+  tags,
+  type IdeaStatus,
+} from "@/db/schema";
 import { newId } from "@/db/id";
 import type { Db } from "./types";
 
@@ -146,6 +154,39 @@ export async function getIdea(
 export async function setIdeaHidden(db: Db, ideaId: string, hidden: boolean) {
   const [row] = await db.update(ideas).set({ hidden }).where(eq(ideas.id, ideaId)).returning();
   return row ?? null;
+}
+
+/**
+ * Marks an Idea as seen by the Team (US-5.5). Only the first time counts: an Idea already
+ * reviewed keeps its original `reviewed_at`. Safe to call repeatedly.
+ */
+export async function markIdeaReviewed(db: Db, ideaId: string) {
+  await db
+    .update(ideas)
+    .set({ reviewedAt: sql`now()` })
+    .where(and(eq(ideas.id, ideaId), isNull(ideas.reviewedAt)));
+}
+
+/**
+ * The moderation queue (US-5.5): a Team's Ideas nobody has reviewed yet, newest first, across
+ * all its Boards. Hidden Ideas are included (a Member may not have seen them either).
+ */
+export async function listUnreviewedIdeas(db: Db, teamId: string, limit = 50) {
+  return db
+    .select({
+      id: ideas.id,
+      title: ideas.title,
+      status: ideas.status,
+      hidden: ideas.hidden,
+      createdAt: ideas.createdAt,
+      boardName: boards.name,
+      boardSlug: boards.slug,
+    })
+    .from(ideas)
+    .innerJoin(boards, eq(ideas.boardId, boards.id))
+    .where(and(eq(boards.teamId, teamId), isNull(ideas.reviewedAt)))
+    .orderBy(desc(ideas.createdAt), desc(ideas.id))
+    .limit(limit);
 }
 
 /**

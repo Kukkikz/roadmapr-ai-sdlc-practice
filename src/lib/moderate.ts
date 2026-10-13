@@ -1,4 +1,11 @@
-import { getBoardById, getComment, getIdea, setCommentHidden, setIdeaHidden } from "@/data";
+import {
+  getBoardById,
+  getComment,
+  getIdea,
+  markIdeaReviewed,
+  setCommentHidden,
+  setIdeaHidden,
+} from "@/data";
 import type { Db } from "@/data";
 
 export type ModerateResult = "changed" | "unchanged" | "not_found";
@@ -20,6 +27,8 @@ export async function moderateIdea(
   if (!idea) return "not_found";
   const board = await getBoardById(db, idea.boardId);
   if (!board || board.teamId !== teamId) return "not_found";
+  // Acting on an Idea, even a no-op, means a Member has looked at it (US-5.5).
+  await markIdeaReviewed(db, idea.id);
   if (idea.hidden === hidden) return "unchanged";
   await setIdeaHidden(db, idea.id, hidden);
   return "changed";
